@@ -97,7 +97,7 @@ struct EventDetailView: View {
                             BadgeView(text: "Free", color: AppTheme.Colors.teal)
                         }
                         if event.isLGBTFriendly {
-                            BadgeView(text: "🏳️‍🌈 LGBT+", color: AppTheme.Colors.coral)
+                            BadgeView(text: "LGBT+", color: AppTheme.Colors.nightPurple)
                         }
                     }
                     .padding(AppTheme.Spacing.md)

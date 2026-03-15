@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 1.8  
+**Version:** 1.9  
 **Last Updated:** March 14, 2026  
 **Platform:** iOS 17+ / macOS (builds clean on both)  
 **Language:** Swift / SwiftUI  
@@ -318,6 +318,7 @@ create table business_owners (
 - [x] ProfileView + LoginView (Email/Password, Sign Up, Magic Link, Apple, Google)
 - [x] All reusable components
 - [x] Builds clean: iOS ✅ macOS ✅
+- [x] **Zero emojis** — all replaced with SF Symbols (iOS) and lucide-react SVG icons (portal)
 
 ### ✅ Phase 2 — Backend, Auth & Admin Portal (COMPLETE)
 - [x] Supabase project — URL + keys configured (new `sb_publishable_` format, NOT legacy JWT)

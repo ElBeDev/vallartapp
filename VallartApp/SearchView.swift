@@ -209,7 +209,7 @@ struct FilterSheetView: View {
                     Picker("Category", selection: $vm.selectedCategory) {
                         Text("All").tag(Optional<ListingCategory>.none)
                         ForEach(ListingCategory.allCases) { cat in
-                            Text("\(cat.emoji) \(cat.rawValue)").tag(Optional(cat))
+                            Label(cat.rawValue, systemImage: cat.icon).tag(Optional(cat))
                         }
                     }
                     .pickerStyle(.menu)

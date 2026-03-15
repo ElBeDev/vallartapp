@@ -31,20 +31,7 @@ enum ListingCategory: String, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var emoji: String {
-        switch self {
-        case .restaurants: return "🍽️"
-        case .bars:        return "🍹"
-        case .hotels:      return "🏨"
-        case .activities:  return "🏄"
-        case .yachts:      return "⛵"
-        case .rentals:     return "🏍️"
-        case .events:      return "🎉"
-        case .beaches:     return "🏖️"
-        case .shopping:    return "🛍️"
-        case .spas:        return "💆"
-        }
-    }
+
 }
 
 // MARK: - Neighborhood

@@ -29,7 +29,8 @@ struct MapExploreView: View {
                                 vm.selectedCategory = nil
                             }
                             ForEach(ListingCategory.allCases) { cat in
-                                FilterChip(title: "\(cat.emoji) \(cat.rawValue)",
+                                FilterChip(title: cat.rawValue,
+                                           icon: cat.icon,
                                            isSelected: vm.selectedCategory == cat) {
                                     vm.selectedCategory = cat
                                 }

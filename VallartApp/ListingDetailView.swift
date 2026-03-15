@@ -88,7 +88,7 @@ struct ListingDetailView: View {
                     BadgeView(text: "Editor's Pick", color: AppTheme.Colors.teal)
                 }
                 if listing.isLGBTFriendly {
-                    BadgeView(text: "🏳️‍🌈", color: AppTheme.Colors.coral)
+                    BadgeView(text: "LGBT+", color: AppTheme.Colors.nightPurple)
                 }
             }
             .padding(AppTheme.Spacing.md)
@@ -260,7 +260,7 @@ struct CategoryListView: View {
                 }
             }
         }
-        .navigationTitle("\(category.emoji) \(category.rawValue)")
+        .navigationTitle(category.rawValue)
         .navTitleMode(.large)
         .task {
             do {

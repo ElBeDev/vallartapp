@@ -44,7 +44,7 @@ struct ExploreView: View {
     // MARK: Header
     private var headerView: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
-            Text("¡Buenos días! 🌴")
+            Text("Buenos días")
                 .font(AppTheme.Font.caption())
                 .foregroundStyle(AppTheme.Colors.mediumGray)
             Text("Puerto Vallarta")

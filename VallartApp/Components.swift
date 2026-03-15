@@ -38,8 +38,9 @@ struct CategoryGridCard: View {
                 .shadow(color: cardColor.opacity(0.25), radius: 6, y: 3)
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
-                Text(category.emoji)
-                    .font(.system(size: 28))
+                Image(systemName: category.icon)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.white)
                 Text(category.rawValue)
                     .font(AppTheme.Font.label(13))
                     .foregroundStyle(.white)
@@ -263,19 +264,26 @@ struct BadgeView: View {
 // MARK: - FilterChip
 struct FilterChip: View {
     let title: String
+    var icon: String? = nil
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(AppTheme.Font.label(13))
-                .foregroundStyle(isSelected ? .white : AppTheme.Colors.deepNavy)
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.sm)
-                .background(isSelected ? AppTheme.Colors.coral : AppTheme.Colors.white)
-                .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+            HStack(spacing: 4) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                Text(title)
+                    .font(AppTheme.Font.label(13))
+            }
+            .foregroundStyle(isSelected ? .white : AppTheme.Colors.deepNavy)
+            .padding(.horizontal, AppTheme.Spacing.md)
+            .padding(.vertical, AppTheme.Spacing.sm)
+            .background(isSelected ? AppTheme.Colors.coral : AppTheme.Colors.white)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
         }
     }
 }
