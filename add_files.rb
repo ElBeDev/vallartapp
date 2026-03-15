@@ -1,3 +1,45 @@
+#!/usr/bin/env ruby
+# add_files_to_xcode.rb
+# Rewrites project.pbxproj to include all Swift files
+
+pbxproj_path = "/Users/bener/IOSApps/VallartApp/VallartApp.xcodeproj/project.pbxproj"
+
+swift_files = %w[
+  AppTheme.swift
+  Components.swift
+  ContentView.swift
+  EventsView.swift
+  ExploreView.swift
+  ListingDetailView.swift
+  MainTabView.swift
+  MapExploreView.swift
+  MockDataService.swift
+  Models.swift
+  ProfileView.swift
+  SearchView.swift
+  VallartAppApp.swift
+]
+
+# Generate deterministic fake UUIDs based on filename
+def fake_uuid(seed)
+  require 'digest'
+  h = Digest::MD5.hexdigest(seed).upcase
+  "#{h[0,8]}#{h[8,4]}#{h[12,4]}#{h[16,4]}#{h[20,12]}"
+end
+
+file_refs    = {}   # filename -> fileRef UUID
+build_files  = {}   # filename -> buildFile UUID
+
+swift_files.each do |f|
+  file_refs[f]   = fake_uuid("fileref_#{f}")
+  build_files[f] = fake_uuid("buildfile_#{f}")
+end
+
+# Assets UUID (already in project, keep for reference)
+assets_file_ref   = fake_uuid("fileref_Assets.xcassets")
+assets_build_file = fake_uuid("buildfile_Assets.xcassets")
+
+pbxproj = <<~PBXPROJ
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -7,48 +49,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00E0451919E78541ED656E5A922378DA /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */; };
-		028D06BEAA88AACFD6C9C2F49294849E /* ListingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DA2CA1568D9E7EB2789C005DDA9E01 /* ListingRepository.swift */; };
-		045D327AD4BAAFB053E88CC5F6B5BE4B /* MapExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7BE70BB373CC8F08B352DDDCE80CEA2 /* MapExploreView.swift */; };
-		062F538A3A585DBC16F365AD65AD4739 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AB2136FEDE7CE902550F13BB292F09 /* Components.swift */; };
-		348D7055C1E5B7C2174108E9DDF5D2F7 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 909362176D312EDC97E4943B7FD66100 /* Supabase */; };
-		4CF112A6CFAB97F4BBCFFEF1EE9ECEE3 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2AE0C752F6B6C69A424FCAB50E1B1FD /* MainTabView.swift */; };
-		4DA70938C1D85C62BABE87C1C6292F51 /* VallartAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F785E5DC365B88C957047835AE7B07E /* VallartAppApp.swift */; };
-		729A150EAE4793319564AD3F2C3ABE38 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D530576D5CF8B70831C69D8771FA49 /* Models.swift */; };
-		769E1CE5FA39D9F088D8DF2B4634507B /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DCECBD3767614ACBCE509B5A5051B7E /* ExploreView.swift */; };
-		912811458D7B993B52E9BB97584A10B1 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4207B2ED0551AD4F80A9EF50E7F5FF5A /* AuthService.swift */; };
-		971955DE3E1888B61B8D270173EF471B /* EventRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC61A5B63D0AD2721E8A5724F9EB8F1C /* EventRepository.swift */; };
-		99812033B8BD7CDC0C7E876AFBED65EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC3340C45202B29152467289110AC2BA /* Assets.xcassets */; };
-		C765A3E9CC01BD877C50BBECD907EA95 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D14C673FF59C4C1B6F7C244BDD3B4E38 /* ProfileView.swift */; };
-		C90146717C01DA2380D098585A2B79C6 /* MockDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F7D2C9D07E4E12AE1460A7B4C10B14 /* MockDataService.swift */; };
-		C975179C4D6737450967D6AE0180AF5E /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3EE344EB709CC8453743B2C92BEC22F /* AppTheme.swift */; };
-		CB9B01F143FEFF2BCA066FC2F871E55C /* ListingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA6668483C75496DDB5BE3ADC2DBBE2 /* ListingDetailView.swift */; };
-		EC452F21BB5B0C09C3FD2BDD8D936C06 /* EventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F963B37125DC6F5B16E65C885A1FBC /* EventsView.swift */; };
-		F3EB1DD40F7AFFCF4C5B277743EED95D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8C13525269D9F9FAC9D986EED98AD4 /* ContentView.swift */; };
-		F4F905BB38F666A73F65B59F787A7908 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD1CCEBA5BC1F55640786326FFD3237 /* SearchView.swift */; };
+#{swift_files.map { |f| "\t\t#{build_files[f]} /* #{f} in Sources */ = {isa = PBXBuildFile; fileRef = #{file_refs[f]} /* #{f} */; };" }.join("\n")}
+		#{assets_build_file} /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = #{assets_file_ref} /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0A8C13525269D9F9FAC9D986EED98AD4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		15AB2136FEDE7CE902550F13BB292F09 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
-		4207B2ED0551AD4F80A9EF50E7F5FF5A /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
-		4F785E5DC365B88C957047835AE7B07E /* VallartAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VallartAppApp.swift; sourceTree = "<group>"; };
-		52F7D2C9D07E4E12AE1460A7B4C10B14 /* MockDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDataService.swift; sourceTree = "<group>"; };
-		550A6A8DED74E3046A78F93A0C0494A6 /* WORKFLOW.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = WORKFLOW.md; sourceTree = "<group>"; };
-		6BD1CCEBA5BC1F55640786326FFD3237 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
-		83D530576D5CF8B70831C69D8771FA49 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		8DA6668483C75496DDB5BE3ADC2DBBE2 /* ListingDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailView.swift; sourceTree = "<group>"; };
-		92F963B37125DC6F5B16E65C885A1FBC /* EventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsView.swift; sourceTree = "<group>"; };
-		9DCECBD3767614ACBCE509B5A5051B7E /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
-		A2AE0C752F6B6C69A424FCAB50E1B1FD /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		A6A849C82F6634A30015E693 /* VallartApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VallartApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B2DA2CA1568D9E7EB2789C005DDA9E01 /* ListingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingRepository.swift; sourceTree = "<group>"; };
-		B3EE344EB709CC8453743B2C92BEC22F /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
-		C7BE70BB373CC8F08B352DDDCE80CEA2 /* MapExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapExploreView.swift; sourceTree = "<group>"; };
-		CC3340C45202B29152467289110AC2BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		CC61A5B63D0AD2721E8A5724F9EB8F1C /* EventRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRepository.swift; sourceTree = "<group>"; };
-		D14C673FF59C4C1B6F7C244BDD3B4E38 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+#{swift_files.map { |f| "\t\t#{file_refs[f]} /* #{f} */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = #{f}; sourceTree = \"<group>\"; };" }.join("\n")}
+		#{assets_file_ref} /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,7 +64,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				348D7055C1E5B7C2174108E9DDF5D2F7 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,38 +78,21 @@
 			);
 			sourceTree = "<group>";
 		};
+		A6A849CA2F6634A30015E693 /* VallartApp */ = {
+			isa = PBXGroup;
+			children = (
+#{swift_files.map { |f| "\t\t\t\t#{file_refs[f]} /* #{f} */," }.join("\n")}
+				#{assets_file_ref} /* Assets.xcassets */,
+			);
+			path = VallartApp;
+			sourceTree = "<group>";
+		};
 		A6A849C92F6634A30015E693 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				A6A849C82F6634A30015E693 /* VallartApp.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		A6A849CA2F6634A30015E693 /* VallartApp */ = {
-			isa = PBXGroup;
-			children = (
-				B3EE344EB709CC8453743B2C92BEC22F /* AppTheme.swift */,
-				4207B2ED0551AD4F80A9EF50E7F5FF5A /* AuthService.swift */,
-				15AB2136FEDE7CE902550F13BB292F09 /* Components.swift */,
-				0A8C13525269D9F9FAC9D986EED98AD4 /* ContentView.swift */,
-				CC61A5B63D0AD2721E8A5724F9EB8F1C /* EventRepository.swift */,
-				92F963B37125DC6F5B16E65C885A1FBC /* EventsView.swift */,
-				9DCECBD3767614ACBCE509B5A5051B7E /* ExploreView.swift */,
-				8DA6668483C75496DDB5BE3ADC2DBBE2 /* ListingDetailView.swift */,
-				B2DA2CA1568D9E7EB2789C005DDA9E01 /* ListingRepository.swift */,
-				A2AE0C752F6B6C69A424FCAB50E1B1FD /* MainTabView.swift */,
-				C7BE70BB373CC8F08B352DDDCE80CEA2 /* MapExploreView.swift */,
-				52F7D2C9D07E4E12AE1460A7B4C10B14 /* MockDataService.swift */,
-				83D530576D5CF8B70831C69D8771FA49 /* Models.swift */,
-				D14C673FF59C4C1B6F7C244BDD3B4E38 /* ProfileView.swift */,
-				6BD1CCEBA5BC1F55640786326FFD3237 /* SearchView.swift */,
-				EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */,
-				4F785E5DC365B88C957047835AE7B07E /* VallartAppApp.swift */,
-				CC3340C45202B29152467289110AC2BA /* Assets.xcassets */,
-				550A6A8DED74E3046A78F93A0C0494A6 /* WORKFLOW.md */,
-			);
-			path = VallartApp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -122,7 +112,6 @@
 			);
 			name = VallartApp;
 			packageProductDependencies = (
-				909362176D312EDC97E4943B7FD66100 /* Supabase */,
 			);
 			productName = VallartApp;
 			productReference = A6A849C82F6634A30015E693 /* VallartApp.app */;
@@ -152,9 +141,6 @@
 			);
 			mainGroup = A6A849BF2F6634A30015E693;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				2E74B835EEBDCDD3E98428410B950A09 /* XCRemoteSwiftPackageReference "supabase-swift" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A6A849C92F6634A30015E693 /* Products */;
 			projectDirPath = "";
@@ -170,7 +156,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				99812033B8BD7CDC0C7E876AFBED65EB /* Assets.xcassets in Resources */,
+				#{assets_build_file} /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,23 +167,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C975179C4D6737450967D6AE0180AF5E /* AppTheme.swift in Sources */,
-				912811458D7B993B52E9BB97584A10B1 /* AuthService.swift in Sources */,
-				062F538A3A585DBC16F365AD65AD4739 /* Components.swift in Sources */,
-				F3EB1DD40F7AFFCF4C5B277743EED95D /* ContentView.swift in Sources */,
-				971955DE3E1888B61B8D270173EF471B /* EventRepository.swift in Sources */,
-				EC452F21BB5B0C09C3FD2BDD8D936C06 /* EventsView.swift in Sources */,
-				769E1CE5FA39D9F088D8DF2B4634507B /* ExploreView.swift in Sources */,
-				CB9B01F143FEFF2BCA066FC2F871E55C /* ListingDetailView.swift in Sources */,
-				028D06BEAA88AACFD6C9C2F49294849E /* ListingRepository.swift in Sources */,
-				4CF112A6CFAB97F4BBCFFEF1EE9ECEE3 /* MainTabView.swift in Sources */,
-				045D327AD4BAAFB053E88CC5F6B5BE4B /* MapExploreView.swift in Sources */,
-				C90146717C01DA2380D098585A2B79C6 /* MockDataService.swift in Sources */,
-				729A150EAE4793319564AD3F2C3ABE38 /* Models.swift in Sources */,
-				C765A3E9CC01BD877C50BBECD907EA95 /* ProfileView.swift in Sources */,
-				F4F905BB38F666A73F65B59F787A7908 /* SearchView.swift in Sources */,
-				00E0451919E78541ED656E5A922378DA /* SupabaseService.swift in Sources */,
-				4DA70938C1D85C62BABE87C1C6292F51 /* VallartAppApp.swift in Sources */,
+#{swift_files.map { |f| "\t\t\t\t#{build_files[f]} /* #{f} in Sources */," }.join("\n")}
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,10 +293,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = R53X7496V2;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -347,17 +316,17 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = t4e.VallartApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Debug;
 		};
@@ -366,10 +335,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = R53X7496V2;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -390,17 +358,17 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = t4e.VallartApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Release;
 		};
@@ -426,25 +394,11 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		2E74B835EEBDCDD3E98428410B950A09 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/supabase/supabase-swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		909362176D312EDC97E4943B7FD66100 /* Supabase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2E74B835EEBDCDD3E98428410B950A09 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Supabase;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A6A849C02F6634A30015E693 /* Project object */;
 }
+PBXPROJ
+
+File.write(pbxproj_path, pbxproj)
+puts "✅ project.pbxproj written with #{swift_files.count} Swift files + Assets.xcassets"
+PBXPROJ
