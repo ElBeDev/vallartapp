@@ -87,7 +87,7 @@ struct FeaturedCardView: View {
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 if listing.isFeatured {
-                    BadgeView(text: "Editor's Pick", color: AppTheme.Colors.goldenSun)
+                    BadgeView(text: "Editor's Pick", color: AppTheme.Colors.goldenSun, textColor: AppTheme.Colors.deepNavy)
                 }
                 Text(listing.name)
                     .font(AppTheme.Font.headline())
@@ -227,8 +227,9 @@ struct EventCardView: View {
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 HStack(spacing: AppTheme.Spacing.xs) {
                     BadgeView(text: event.isPublic ? "Public" : "Private",
-                              color: .white.opacity(0.3))
-                    if event.isFree { BadgeView(text: "Free", color: AppTheme.Colors.teal) }
+                              color: .white.opacity(0.25),
+                              textColor: .white)
+                    if event.isFree { BadgeView(text: "Free", color: AppTheme.Colors.teal, textColor: .white) }
                 }
                 Text(event.title)
                     .font(AppTheme.Font.label())
@@ -249,15 +250,23 @@ struct EventCardView: View {
 struct BadgeView: View {
     let text: String
     let color: Color
+    /// Override text color — if nil, auto-picks white or deepNavy based on background luminance
+    var textColor: Color? = nil
 
     var body: some View {
         Text(text)
             .font(AppTheme.Font.caption(10))
-            .foregroundStyle(AppTheme.Colors.deepNavy)
+            .foregroundStyle(resolvedTextColor)
             .padding(.horizontal, AppTheme.Spacing.sm)
             .padding(.vertical, 3)
             .background(color)
             .clipShape(Capsule())
+    }
+
+    /// Returns white for dark backgrounds, deepNavy for light backgrounds
+    private var resolvedTextColor: Color {
+        if let override = textColor { return override }
+        return color.isLight ? AppTheme.Colors.deepNavy : .white
     }
 }
 

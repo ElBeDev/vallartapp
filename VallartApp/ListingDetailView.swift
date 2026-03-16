@@ -80,15 +80,15 @@ struct ListingDetailView: View {
                 }
 
             HStack(spacing: AppTheme.Spacing.xs) {
-                BadgeView(text: listing.category.rawValue, color: .white.opacity(0.85))
+                BadgeView(text: listing.category.rawValue, color: .white.opacity(0.85), textColor: AppTheme.Colors.deepNavy)
                 if listing.isPremium {
-                    BadgeView(text: "⭐ Premium", color: AppTheme.Colors.goldenSun)
+                    BadgeView(text: "Premium", color: AppTheme.Colors.goldenSun, textColor: AppTheme.Colors.deepNavy)
                 }
                 if listing.isFeatured {
-                    BadgeView(text: "Editor's Pick", color: AppTheme.Colors.teal)
+                    BadgeView(text: "Editor's Pick", color: AppTheme.Colors.teal, textColor: .white)
                 }
                 if listing.isLGBTFriendly {
-                    BadgeView(text: "LGBT+", color: AppTheme.Colors.nightPurple)
+                    BadgeView(text: "LGBT+", color: AppTheme.Colors.nightPurple, textColor: .white)
                 }
             }
             .padding(AppTheme.Spacing.md)

@@ -64,6 +64,26 @@ extension Color {
     }
 }
 
+// MARK: - Color luminance helper
+extension Color {
+    /// True when the color is "light" (perceptual luminance > 0.55) — use dark text on top
+    var isLight: Bool {
+        // Resolve to UIColor/NSColor to extract RGB components
+        #if canImport(UIKit)
+        let uiColor = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #elseif canImport(AppKit)
+        guard let cgColor = NSColor(self).cgColor.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil),
+              let comps = cgColor.components, comps.count >= 3 else { return false }
+        let (r, g, b) = (comps[0], comps[1], comps[2])
+        #endif
+        // Perceived luminance (WCAG formula)
+        let luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        return luminance > 0.55
+    }
+}
+
 // MARK: - Cross-platform View modifiers
 #if os(iOS) || os(visionOS)
 extension View {

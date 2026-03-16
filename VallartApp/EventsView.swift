@@ -283,7 +283,7 @@ struct EventListRowView: View {
                         BadgeView(text: "Free", color: AppTheme.Colors.teal)
                     }
                     if event.isRecurring, let label = event.recurrenceLabel {
-                        BadgeView(text: label, color: AppTheme.Colors.goldenSun)
+                        BadgeView(text: label, color: AppTheme.Colors.goldenSun, textColor: AppTheme.Colors.deepNavy)
                     }
                 }
             }
