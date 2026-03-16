@@ -6,6 +6,7 @@ struct ListingDetailView: View {
     @StateObject private var auth = AuthService.shared
     @State private var reviews: [Review] = []
     @State private var reviewsLoaded = false
+    @State private var showDirectionsSheet = false
     private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
 
     var isSaved: Bool { auth.isSaved(listing.id) }
@@ -48,6 +49,38 @@ struct ListingDetailView: View {
         }
         .ignoresSafeArea(edges: .top)
         .navTitleMode(.inline)
+        .confirmationDialog("Open directions in...", isPresented: $showDirectionsSheet, titleVisibility: .visible) {
+            // Apple Maps
+            Button("Apple Maps") {
+                let q = listing.address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                let lat = listing.latitude, lon = listing.longitude
+                if let url = URL(string: "maps://?daddr=\(lat),\(lon)&q=\(q)") {
+                    UIApplication.shared.open(url)
+                }
+            }
+            // Google Maps
+            Button("Google Maps") {
+                let lat = listing.latitude, lon = listing.longitude
+                let name = listing.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                if let url = URL(string: "comgooglemaps://?daddr=\(lat),\(lon)&q=\(name)"),
+                   UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let web = URL(string: "https://www.google.com/maps/dir/?api=1&destination=\(lat),\(lon)") {
+                    UIApplication.shared.open(web)
+                }
+            }
+            // Waze
+            Button("Waze") {
+                let lat = listing.latitude, lon = listing.longitude
+                if let url = URL(string: "waze://?ll=\(lat),\(lon)&navigate=yes"),
+                   UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let web = URL(string: "https://waze.com/ul?ll=\(lat),\(lon)&navigate=yes") {
+                    UIApplication.shared.open(web)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         .task {
             if !reviewsLoaded {
                 reviews = (try? await repo.fetchReviews(for: listing.id)) ?? []
@@ -206,7 +239,7 @@ struct ListingDetailView: View {
                     ActionButtonView(icon: "globe", title: "Website", color: AppTheme.Colors.oceanBlue)
                 }
             }
-            NavigationLink(destination: MapExploreView()) {
+            Button { showDirectionsSheet = true } label: {
                 ActionButtonView(icon: "map.fill", title: "Directions", color: AppTheme.Colors.coral)
             }
         }
