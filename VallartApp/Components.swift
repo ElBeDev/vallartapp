@@ -70,20 +70,72 @@ struct CategoryGridCard: View {
     }
 }
 
+// MARK: - ListingImageView  (AsyncImage with gradient overlay + fallback)
+struct ListingImageView: View {
+    let urlString: String?
+    let width: CGFloat
+    let height: CGFloat
+    var cornerRadius: CGFloat = 0
+    var fallbackColor: Color = AppTheme.Colors.deepNavy
+
+    var body: some View {
+        ZStack {
+            if let str = urlString, let url = URL(string: str) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let img):
+                        img
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: width, height: height)
+                            .clipped()
+                    case .failure:
+                        fallbackView
+                    case .empty:
+                        ZStack {
+                            fallbackColor.opacity(0.3)
+                            ProgressView().tint(.white)
+                        }
+                        .frame(width: width, height: height)
+                    @unknown default:
+                        fallbackView
+                    }
+                }
+            } else {
+                fallbackView
+            }
+        }
+        .frame(width: width, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+
+    private var fallbackView: some View {
+        fallbackColor.opacity(0.25)
+            .frame(width: width, height: height)
+    }
+}
+
 // MARK: - FeaturedCardView
 struct FeaturedCardView: View {
     let listing: Listing
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: AppTheme.Radius.xl)
-                .fill(cardGradient)
-                .frame(width: 280, height: 180)
+            // Real photo
+            ListingImageView(
+                urlString: listing.photos.first,
+                width: 280, height: 180,
+                cornerRadius: AppTheme.Radius.xl,
+                fallbackColor: cardColor
+            )
 
-            Image(systemName: listing.heroPhoto)
-                .font(.system(size: 60))
-                .foregroundStyle(.white.opacity(0.2))
-                .frame(width: 280, height: 180)
+            // Dark gradient so text is always readable
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.65)],
+                startPoint: .top, endPoint: .bottom
+            )
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
+            .frame(width: 280, height: 180)
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 if listing.isFeatured {
@@ -109,6 +161,7 @@ struct FeaturedCardView: View {
             }
             .padding(AppTheme.Spacing.md)
         }
+        .frame(width: 280, height: 180)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
         .shadow(color: cardColor.opacity(0.3), radius: 8, y: 4)
     }
@@ -127,10 +180,6 @@ struct FeaturedCardView: View {
         case .spas:        return AppTheme.Colors.palmGreen
         }
     }
-
-    private var cardGradient: LinearGradient {
-        LinearGradient(colors: [cardColor, cardColor.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
 }
 
 // MARK: - ListingRowView
@@ -139,14 +188,13 @@ struct ListingRowView: View {
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.md) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                    .fill(iconBg)
-                    .frame(width: 64, height: 64)
-                Image(systemName: listing.heroPhoto)
-                    .font(.system(size: 26))
-                    .foregroundStyle(iconColor)
-            }
+            // Thumbnail with real photo
+            ListingImageView(
+                urlString: listing.photos.first,
+                width: 64, height: 64,
+                cornerRadius: AppTheme.Radius.md,
+                fallbackColor: iconColor
+            )
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 HStack {
@@ -207,8 +255,6 @@ struct ListingRowView: View {
         case .spas:        return AppTheme.Colors.palmGreen
         }
     }
-
-    private var iconBg: Color { iconColor.opacity(0.12) }
 }
 
 // MARK: - EventCardView

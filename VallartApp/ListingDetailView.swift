@@ -109,14 +109,21 @@ struct ListingDetailView: View {
     // MARK: Hero
     private var heroSection: some View {
         ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 0)
-                .fill(categoryGradient)
-                .frame(height: 300)
-                .overlay {
-                    Image(systemName: listing.heroPhoto)
-                        .font(.system(size: 90))
-                        .foregroundStyle(.white.opacity(0.3))
-                }
+            // Real photo full-width
+            ListingImageView(
+                urlString: listing.photos.first,
+                width: UIScreen.main.bounds.width,
+                height: 300,
+                cornerRadius: 0,
+                fallbackColor: categoryColor
+            )
+
+            // Bottom gradient for badge readability
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.55)],
+                startPoint: .center, endPoint: .bottom
+            )
+            .frame(height: 300)
 
             HStack(spacing: AppTheme.Spacing.xs) {
                 BadgeView(text: listing.category.rawValue, color: .white.opacity(0.85), textColor: AppTheme.Colors.deepNavy)

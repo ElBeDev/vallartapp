@@ -124,14 +124,12 @@ struct MapPreviewCard: View {
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.md) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
-                    .fill(pinColor.opacity(0.15))
-                    .frame(width: 70, height: 70)
-                Image(systemName: listing.heroPhoto)
-                    .font(.system(size: 28))
-                    .foregroundStyle(pinColor)
-            }
+            ListingImageView(
+                urlString: listing.photos.first,
+                width: 70, height: 70,
+                cornerRadius: AppTheme.Radius.sm,
+                fallbackColor: pinColor
+            )
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 Text(listing.name)
