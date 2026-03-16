@@ -3,7 +3,7 @@ import Combine
 
 // MARK: - ExploreView
 struct ExploreView: View {
-    @StateObject private var vm = ExploreViewModel()
+    @ObservedObject var vm: ExploreViewModel
     @State private var selectedCategory: ListingCategory? = nil
 
     var body: some View {

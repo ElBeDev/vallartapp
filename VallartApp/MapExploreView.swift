@@ -4,35 +4,61 @@ import MapKit
 
 // MARK: - MapExploreView
 struct MapExploreView: View {
-    @StateObject private var vm = MapViewModel()
+    /// All listings passed in from ExploreViewModel — same data as Explore tab
+    var listings: [Listing] = []
+    @State private var selectedCategory: ListingCategory? = nil
     @State private var selectedListing: Listing? = nil
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 20.6534, longitude: -105.2253),
+            span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15)
+        )
+    )
+
+    /// Filter listings by selected category — no network call needed
+    private var visibleListings: [Listing] {
+        guard let cat = selectedCategory else { return listings }
+        return listings.filter { $0.category == cat }
+    }
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                Map(position: $vm.cameraPosition) {
-                    ForEach(vm.visibleListings) { listing in
+                Map(position: $cameraPosition) {
+                    ForEach(visibleListings) { listing in
                         Annotation(listing.name, coordinate: listing.coordinate) {
                             MapPinView(listing: listing)
-                                .onTapGesture { selectedListing = listing }
+                                .onTapGesture {
+                                    selectedListing = listing
+                                    // Animate camera to tapped pin
+                                    withAnimation {
+                                        cameraPosition = .region(MKCoordinateRegion(
+                                            center: listing.coordinate,
+                                            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                                        ))
+                                    }
+                                }
                         }
                     }
                 }
                 .mapStyle(.standard(elevation: .realistic))
                 .ignoresSafeArea(edges: .top)
+                // Dismiss card when tapping the map
+                .onTapGesture { selectedListing = nil }
 
                 VStack(spacing: 0) {
                     // Category filter chips
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: AppTheme.Spacing.sm) {
-                            FilterChip(title: "All", isSelected: vm.selectedCategory == nil) {
-                                vm.selectedCategory = nil
+                            FilterChip(title: "All", isSelected: selectedCategory == nil) {
+                                selectedCategory = nil
                             }
                             ForEach(ListingCategory.allCases) { cat in
                                 FilterChip(title: cat.rawValue,
                                            icon: cat.icon,
-                                           isSelected: vm.selectedCategory == cat) {
-                                    vm.selectedCategory = cat
+                                           isSelected: selectedCategory == cat) {
+                                    selectedCategory = cat
+                                    selectedListing = nil
                                 }
                             }
                         }
@@ -58,39 +84,6 @@ struct MapExploreView: View {
             .animation(.spring(duration: 0.3), value: selectedListing?.id)
         }
     }
-}
-
-// MARK: - MapViewModel
-class MapViewModel: ObservableObject {
-    @Published var selectedCategory: ListingCategory? = nil { didSet { Task { await loadListings() } } }
-    @Published var allListings: [Listing] = []
-    @Published var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 20.6534, longitude: -105.2253),
-            span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15)
-        )
-    )
-
-    private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
-
-    init() { Task { await loadListings() } }
-
-    @MainActor
-    func loadListings() async {
-        do {
-            let result: [Listing]
-            if let cat = selectedCategory {
-                result = try await repo.fetchByCategory(cat)
-            } else {
-                result = try await repo.fetchAll()
-            }
-            allListings = result.isEmpty ? MockDataService.shared.listings : result
-        } catch {
-            allListings = MockDataService.shared.listings
-        }
-    }
-
-    var visibleListings: [Listing] { allListings }
 }
 
 // MARK: - MapPinView
@@ -133,11 +126,11 @@ struct MapPreviewCard: View {
         HStack(spacing: AppTheme.Spacing.md) {
             ZStack {
                 RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
-                    .fill(AppTheme.Colors.teal.opacity(0.15))
+                    .fill(pinColor.opacity(0.15))
                     .frame(width: 70, height: 70)
                 Image(systemName: listing.heroPhoto)
                     .font(.system(size: 28))
-                    .foregroundStyle(AppTheme.Colors.teal)
+                    .foregroundStyle(pinColor)
             }
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
@@ -174,5 +167,20 @@ struct MapPreviewCard: View {
         .background(AppTheme.Colors.white)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+    }
+
+    private var pinColor: Color {
+        switch listing.category {
+        case .restaurants: return AppTheme.Colors.coral
+        case .bars:        return AppTheme.Colors.nightPurple
+        case .hotels:      return AppTheme.Colors.deepNavy
+        case .activities:  return AppTheme.Colors.teal
+        case .yachts:      return AppTheme.Colors.oceanBlue
+        case .rentals:     return AppTheme.Colors.goldenSun
+        case .events:      return AppTheme.Colors.coral
+        case .beaches:     return AppTheme.Colors.teal
+        case .shopping:    return AppTheme.Colors.deepNavy
+        case .spas:        return AppTheme.Colors.palmGreen
+        }
     }
 }
