@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 // MARK: - ListingDetailView
 struct ListingDetailView: View {
@@ -25,6 +26,11 @@ struct ListingDetailView: View {
 
                     // Info grid
                     infoGrid
+
+                    Divider()
+
+                    // Inline map + navigate
+                    locationSection
 
                     Divider()
 
@@ -213,6 +219,59 @@ struct ListingDetailView: View {
         }
     }
 
+    // MARK: Location (inline map + navigate)
+    private var locationSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            Text("Location")
+                .font(AppTheme.Font.headline())
+                .foregroundStyle(AppTheme.Colors.deepNavy)
+
+            // Mini map
+            let coord = CLLocationCoordinate2D(latitude: listing.latitude, longitude: listing.longitude)
+            let region = MKCoordinateRegion(center: coord,
+                                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            Map(initialPosition: .region(region)) {
+                Annotation(listing.name, coordinate: coord) {
+                    ZStack {
+                        Circle()
+                            .fill(categoryColor)
+                            .frame(width: 36, height: 36)
+                            .shadow(color: categoryColor.opacity(0.4), radius: 4, y: 2)
+                        Image(systemName: listing.category.icon)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                }
+            }
+            .mapStyle(.standard(elevation: .realistic))
+            .frame(height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
+            .disabled(true) // non-interactive — tap Navigate instead
+
+            // Address + Navigate button side by side
+            HStack(spacing: AppTheme.Spacing.sm) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(listing.address)
+                        .font(AppTheme.Font.label())
+                        .foregroundStyle(AppTheme.Colors.deepNavy)
+                    Text(listing.neighborhood.rawValue)
+                        .font(AppTheme.Font.caption())
+                        .foregroundStyle(AppTheme.Colors.mediumGray)
+                }
+                Spacer()
+                Button { showDirectionsSheet = true } label: {
+                    Label("Navigate", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                        .font(AppTheme.Font.label())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        .padding(.vertical, AppTheme.Spacing.sm)
+                        .background(AppTheme.Colors.coral)
+                        .clipShape(Capsule())
+                }
+            }
+        }
+    }
+
     // MARK: Description
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
@@ -239,8 +298,10 @@ struct ListingDetailView: View {
                     ActionButtonView(icon: "globe", title: "Website", color: AppTheme.Colors.oceanBlue)
                 }
             }
-            Button { showDirectionsSheet = true } label: {
-                ActionButtonView(icon: "map.fill", title: "Directions", color: AppTheme.Colors.coral)
+            if let ig = listing.instagram, let url = URL(string: "https://instagram.com/\(ig.replacingOccurrences(of: "@", with: ""))") {
+                Link(destination: url) {
+                    ActionButtonView(icon: "camera.fill", title: "Instagram", color: AppTheme.Colors.nightPurple)
+                }
             }
         }
     }
