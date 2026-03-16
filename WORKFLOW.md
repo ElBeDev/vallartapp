@@ -1,297 +1,324 @@
 # VallartApp — Development Workflow
 
-**Version:** 1.0  
-**Last Updated:** March 14, 2026  
-**Platform:** iOS 17+  
-**Language:** Swift / SwiftUI  
+**Version:** 2.0
+**Last Updated:** March 16, 2026
+**Platform:** iOS 17+
+**Language:** Swift / SwiftUI
 **Primary Language:** English | **Secondary Language:** Spanish (es-MX)
 
 ---
 
-## 🧭 App Overview
+## App Overview
 
-VallartApp is a tourism discovery platform for **Puerto Vallarta and surrounding areas** (Riviera Nayarit, Sayulita, Punta Mita, Bucerías, Sayulita, San Pancho, etc.).
+VallartApp is a tourism discovery platform for **Puerto Vallarta and surrounding areas**
+(Riviera Nayarit, Sayulita, Punta Mita, Bucerías, La Cruz, San Pancho, Yelapa).
 
 **Business Model:** Yelp / TripAdvisor style
-- ✅ **Free for users** — browse everything, read reviews, save favorites
-- 💼 **Paid plans for business owners** — featured placement, analytics, unlimited photos, booking integration
-- 🌟 **User Premium (future)** — ad-free, exclusive deals, early event access
+- Free for users — browse everything, read reviews, save favorites
+- Paid plans for business owners — featured placement, analytics, unlimited photos, booking integration
+- User Premium (future) — ad-free, exclusive deals, early event access
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+| Layer             | Technology                                      |
+|-------------------|-------------------------------------------------|
+| iOS App           | Swift / SwiftUI — Xcode 26.3                    |
+| Backend / DB      | Supabase (PostgreSQL + Storage + Auth)          |
+| Web Admin Portal  | Next.js 14 (App Router) + TypeScript            |
+| Hosting           | Vercel (web portal)                             |
+| Auth              | Supabase Auth (Magic Link, Apple, Google)       |
+| Maps              | MapKit (native iOS)                             |
+| Images            | Supabase Storage (public bucket "listings")     |
+| Version Control   | GitHub — github.com/ElBeDev/vallartapp          |
+
+---
+
+## Project Structure
 
 ```
 VallartApp/
-├── VallartApp/
-│   ├── App/
-│   │   └── MainTabView.swift
-│   ├── Models/
-│   │   ├── Category.swift
-│   │   ├── Listing.swift
-│   │   ├── Event.swift
-│   │   ├── Restaurant.swift
-│   │   ├── Hotel.swift
-│   │   ├── Activity.swift
-│   │   ├── YachtRental.swift
-│   │   ├── VehicleRental.swift
-│   │   ├── Review.swift
-│   │   └── User.swift
-│   ├── Features/
-│   │   ├── Explore/
-│   │   │   ├── ExploreView.swift
-│   │   │   └── ExploreViewModel.swift
-│   │   ├── Events/
-│   │   │   ├── EventsView.swift
-│   │   │   ├── EventDetailView.swift
-│   │   │   └── EventsViewModel.swift
-│   │   ├── Map/
-│   │   │   ├── MapExploreView.swift
-│   │   │   └── MapViewModel.swift
-│   │   ├── Search/
-│   │   │   ├── SearchView.swift
-│   │   │   └── SearchViewModel.swift
-│   │   ├── Detail/
-│   │   │   ├── ListingDetailView.swift
-│   │   │   └── ReviewRowView.swift
-│   │   ├── Profile/
-│   │   │   ├── ProfileView.swift
-│   │   │   └── ProfileViewModel.swift
-│   │   └── Auth/
-│   │       ├── LoginView.swift
-│   │       └── SignUpView.swift
-│   ├── Components/
-│   │   ├── ListingCardView.swift
-│   │   ├── CategoryChipView.swift
-│   │   ├── RatingStarsView.swift
-│   │   ├── FeaturedCarouselView.swift
-│   │   ├── SectionHeaderView.swift
-│   │   └── BadgeView.swift
-│   ├── Services/
-│   │   ├── MockDataService.swift
-│   │   └── LocationService.swift
-│   ├── Resources/
-│   │   └── AppTheme.swift
+├── VallartApp/                   iOS Swift app
+│   ├── AppTheme.swift
+│   ├── AuthService.swift
+│   ├── Components.swift
 │   ├── ContentView.swift
+│   ├── EventRepository.swift
+│   ├── EventsView.swift
+│   ├── ExploreView.swift
+│   ├── ListingDetailView.swift
+│   ├── ListingRepository.swift
+│   ├── MainTabView.swift
+│   ├── MapExploreView.swift
+│   ├── Models.swift
+│   ├── ProfileView.swift
+│   ├── SearchView.swift
+│   ├── SupabaseService.swift
 │   └── VallartAppApp.swift
+├── src/                          Next.js admin portal
+│   ├── app/
+│   │   ├── (admin)/              Protected admin routes
+│   │   │   ├── dashboard/
+│   │   │   ├── listings/
+│   │   │   ├── events/
+│   │   │   ├── business-owners/
+│   │   │   └── notifications/
+│   │   ├── login/
+│   │   └── auth/callback/
+│   └── components/
+│       ├── Sidebar.tsx
+│       ├── ListingForm.tsx
+│       └── EventForm.tsx
+├── supabase/
+│   └── seed.sql                  Full schema + seed data (source of truth)
+├── scripts/
+│   ├── seed.mjs                  Node script to seed DB via API
+│   ├── fix_coordinates.mjs       Coordinate corrections
+│   └── upload_images.mjs         Image upload to Supabase Storage
 └── WORKFLOW.md
 ```
 
 ---
 
-## 🎨 Design System — AppTheme
+## Design System — AppTheme
 
 ### Color Palette
-| Name            | Hex       | Usage                              |
-|-----------------|-----------|------------------------------------|
-| `coral`         | `#FF6B6B` | Primary CTA buttons, highlights    |
-| `teal`          | `#2EC4B6` | Secondary accent, map pins         |
-| `sand`          | `#F7F3E3` | Background, cards                  |
-| `deepNavy`      | `#1A2F4E` | Headers, primary text              |
-| `goldenSun`     | `#FFB347` | Stars, premium badges              |
-| `palmGreen`     | `#4CAF50` | Active states, open status         |
-| `nightPurple`   | `#6C5CE7` | Nightlife category                 |
-| `oceanBlue`     | `#0077B6` | Water activities, yachts           |
+| Name          | Hex       | Usage                          |
+|---------------|-----------|--------------------------------|
+| coral         | #FF6B6B   | Primary CTA, highlights        |
+| teal          | #2EC4B6   | Secondary accent, map pins     |
+| sand          | #F7F3E3   | Background, cards              |
+| deepNavy      | #1A2F4E   | Headers, primary text          |
+| goldenSun     | #FFB347   | Stars, premium badges          |
+| palmGreen     | #4CAF50   | Active/open status             |
+| nightPurple   | #6C5CE7   | Nightlife category             |
+| oceanBlue     | #0077B6   | Water activities, yachts       |
 
 ### Typography
-- **Display:** SF Pro Rounded Bold — hero titles
-- **Headline:** SF Pro Display Semibold — section headers
-- **Body:** SF Pro Text Regular — descriptions
-- **Caption:** SF Pro Text — metadata, tags
+- Display: SF Pro Rounded Bold — hero titles
+- Headline: SF Pro Display Semibold — section headers
+- Body: SF Pro Text Regular — descriptions
+- Caption: SF Pro Text — metadata, tags
 
 ### Spacing System
-- `xs: 4`, `sm: 8`, `md: 16`, `lg: 24`, `xl: 32`, `xxl: 48`
+- xs:4  sm:8  md:16  lg:24  xl:32  xxl:48
 
 ---
 
-## 📦 Categories
-
-| ID  | Name              | Icon | Color         |
-|-----|-------------------|------|---------------|
-| 1   | Restaurants       | 🍽️  | coral         |
-| 2   | Bars & Nightlife  | 🍹  | nightPurple   |
-| 3   | Hotels            | 🏨  | deepNavy      |
-| 4   | Activities        | 🏄  | teal          |
-| 5   | Yacht Rentals     | ⛵  | oceanBlue     |
-| 6   | Car & Moto Rental | 🏍️  | goldenSun     |
-| 7   | Events            | 🎉  | coral         |
-| 8   | Beaches           | 🏖️  | teal          |
-| 9   | Shopping          | 🛍️  | sand/navy     |
-| 10  | Spas & Wellness   | 💆  | palmGreen     |
-
----
-
-## 🗺️ Geographic Coverage
-
-- Puerto Vallarta (Centro, Zona Romántica, Marina, Hotel Zone)
-- Nuevo Vallarta / Riviera Nayarit
-- Bucerías
-- La Cruz de Huanacaxtle
-- Punta Mita
-- Sayulita
-- San Pancho (San Francisco)
-- Yelapa
-
----
-
-## 📱 Navigation Structure
+## Navigation Structure
 
 ```
 MainTabView
-├── Tab 1: Explore       — Home feed, featured, categories grid
-├── Tab 2: Map           — MapKit map with category pins & filters
-├── Tab 3: Events        — Calendar view, public/private events
-├── Tab 4: Search        — Full-text search + filter sheet
-└── Tab 5: Profile       — User profile / Business owner portal
+├── Tab 1: Explore    — Home feed, featured carousel, categories grid, popular now
+├── Tab 2: Map        — MapKit map with category pins, filter chips, preview cards
+├── Tab 3: Events     — Public + private events, featured, calendar
+├── Tab 4: Search     — Full-text search + filter sheet (category, neighborhood, price)
+└── Tab 5: Profile    — User profile, saved listings, auth
 ```
 
 ---
 
-## 🏗️ Architecture
+## Supabase Schema
 
-- **Pattern:** MVVM (Model-View-ViewModel)
-- **State Management:** `@StateObject`, `@ObservableObject`, `@Published`
-- **Navigation:** `NavigationStack` + `TabView`
-- **Data (Phase 1):** Mock data via `MockDataService.swift`
-- **Data (Phase 2+):** Firebase Firestore + Firebase Auth
-- **Maps:** MapKit (native)
-- **Images:** `AsyncImage` → Kingfisher (Phase 2)
-- **Payments:** RevenueCat + StoreKit 2 (Phase 3)
-- **Push Notifications:** Firebase Cloud Messaging (Phase 3)
+### Tables
 
----
+**listings**
+- id, name, category, neighborhood, address, latitude, longitude
+- description, photos (text[]), rating, review_count, price_range (0-4)
+- phone, website, instagram, tags (text[])
+- is_premium, is_featured, is_open, open_hours, is_lgbt_friendly
+- created_at
 
-## 💼 Business Owner Subscription Tiers
+**events**
+- id, title, description, neighborhood, address, latitude, longitude
+- start_date, end_date, is_public, is_free, ticket_price, ticket_url
+- photos, tags, organizer, instagram
+- is_premium, is_featured, is_lgbt_friendly, is_recurring, recurrence_label
+- created_at
 
-| Tier       | Price     | Features                                                      |
-|------------|-----------|---------------------------------------------------------------|
-| **Free**   | $0/mo     | Basic listing, 3 photos, reviews visible                      |
-| **Standard** | $29/mo  | Unlimited photos, reply to reviews, contact button, analytics |
-| **Premium** | $79/mo   | Featured placement, top of search, promoted pin on map, booking widget |
+**profiles** — linked to auth.users
+**reviews** — linked to listings + users
+**business_owners** — plan: free | standard | premium
 
----
-
-## 🚀 Development Phases
-
-### Phase 1 — MVP Foundation (Current)
-- [x] Project folder structure
-- [x] AppTheme (colors, fonts, spacing)
-- [x] All data models
-- [x] MainTabView (5 tabs)
-- [x] ExploreView + ExploreViewModel
-- [x] EventsView + EventDetailView
-- [x] ListingDetailView (shared)
-- [x] SearchView + filters
-- [x] MapExploreView (MapKit)
-- [x] ProfileView
-- [x] MockDataService with sample Puerto Vallarta data
-- [x] All reusable components
-
-### Phase 2 — Backend & Auth (Next)
-- [ ] Firebase project setup
-- [ ] Firebase Auth (email + Sign in with Apple)
-- [ ] Firestore data models & repositories
-- [ ] Google Places API integration (pre-populate listings)
-- [ ] Reviews & ratings (write, read, paginate)
-- [ ] Favorites / saved listings (persisted)
-- [ ] Image upload to Firebase Storage
-- [ ] Algolia search integration
-
-### Phase 3 — Monetization & Business Dashboard
-- [ ] RevenueCat subscription integration
-- [ ] Business owner sign-up + listing claim flow
-- [ ] Business dashboard (analytics, edit listing)
-- [ ] Featured/promoted placement logic
-- [ ] Firebase Cloud Messaging push notifications
-- [ ] Firebase Dynamic Links (shareable deep links)
-
-### Phase 4 — Polish & Launch
-- [ ] Full ES-MX localization (all strings in `Localizable.strings`)
-- [ ] Dark mode support
-- [ ] Offline caching (Firestore offline + SwiftData)
-- [ ] Accessibility (VoiceOver, Dynamic Type)
-- [ ] App Store assets (screenshots, App Preview video)
-- [ ] Privacy manifest (`PrivacyInfo.xcprivacy`)
-- [ ] App Store submission
+### Row Level Security
+- listings, events: public read (anon)
+- reviews: public read, authenticated insert
+- profiles: user can read/write own row only
+- business_owners: user can read own row only
 
 ---
 
-## 🌐 Localization
+## Live Data in Supabase
 
-| Key            | English (default) | Spanish (es-MX)       |
-|----------------|-------------------|-----------------------|
-| `tab.explore`  | Explore           | Explorar              |
-| `tab.map`      | Map               | Mapa                  |
-| `tab.events`   | Events            | Eventos               |
-| `tab.search`   | Search            | Buscar                |
-| `tab.profile`  | Profile           | Perfil                |
-| `cat.restaurants` | Restaurants    | Restaurantes          |
-| `cat.bars`     | Bars & Nightlife  | Bares y Antros        |
-| `cat.hotels`   | Hotels            | Hoteles               |
-| `cat.activities` | Activities      | Actividades           |
-| `cat.yachts`   | Yacht Rentals     | Renta de Yates        |
-| `cat.rentals`  | Car & Moto Rental | Renta de Autos/Motos  |
-| `cat.events`   | Events            | Eventos               |
-| `cat.beaches`  | Beaches           | Playas                |
-| `cat.shopping` | Shopping          | Compras               |
-| `cat.spas`     | Spas & Wellness   | Spas y Bienestar      |
+### 23 Listings (real Puerto Vallarta businesses)
 
----
+| Category        | Listings                                                                 |
+|-----------------|--------------------------------------------------------------------------|
+| Restaurants     | Café des Artistes, Tuna Azul, La Palapa, Mar Y Vino, Barcelona Tapas     |
+| Bars & Nightlife| Los Muertos Brewing, Mandala Beach Club, La Noche Bar                    |
+| Hotels          | Garza Blanca Resort, Casa Kimberly, W Punta de Mita                      |
+| Activities      | Marietas Islands, Canopy River Zip-line, Whale Watching PV, Sayulita Surf School |
+| Yacht Rentals   | Sunset Sailing Cruise PV, Private Yacht Charter Marietas                 |
+| Car & Moto Rental | Vallarta Car Rental, Moto Rent PV                                      |
+| Beaches         | Playa Los Muertos, Playa Sayulita                                        |
+| Shopping        | Mercado de Artesanías                                                    |
+| Spas & Wellness | Garza Blanca Spa                                                         |
 
-## 📋 Mock Data Included (Phase 1)
+### 6 Events (real / recurring)
+- Vallarta Pride 2026 (Annual, LGBT+, Zona Romántica)
+- Moonlight Jazz at the Marina (Monthly, private, ticketed)
+- Sayulita Surf Competition (Annual, free)
+- Gourmet Food & Wine Festival (Annual, November)
+- Thursday Night Art Walk (Weekly, Centro)
+- Sunset Beach Party — Blue Chairs (Daily, LGBT+)
 
-### Restaurants
-- Café des Artistes (Fine dining, Centro)
-- El Arrayán (Mexican cuisine, Zona Romántica)
-- La Palapa (Seafood, Playa Los Muertos)
-- Taco Bar Sayulita (Casual, Sayulita)
-
-### Events
-- Vallarta Pride (Annual, public, Zona Romántica)
-- Moonlight Jazz Night (Weekly, private, Marina)
-- Sayulita Surf Competition (Annual, public, Sayulita)
-- Downtown Food Festival (Monthly, public, Centro)
-
-### Hotels
-- Garza Blanca Preserve Resort & Spa (Luxury)
-- Hotel Rosita (Boutique, historic)
-- Casa Kimberly (Boutique luxury)
-- W Punta de Mita (Luxury resort)
-
-### Activities
-- Marieta Islands Snorkeling Tour
-- ATV Jungle Adventure
-- Zip-line Canopy Tour
-- Whale Watching (seasonal Nov–Mar)
-- Paddle Board Yoga at Sayulita
-
-### Yacht Rentals
-- Sunset Sailing Cruise (4h)
-- Private Catamaran — Marietas
-- Sport Fishing Charter (Full day)
-
-### Car & Moto Rentals
-- Vallarta Car Rental (Centro)
-- Moto Rent PV (Zona Romántica)
-- ATV Adventures PV
+### Images
+- All 23 listings have real photos sourced from official websites
+- Stored in Supabase Storage bucket: `listings` (public)
+- iOS app uses AsyncImage with loading spinner + color fallback
 
 ---
 
-## 🔑 API Keys Needed (Phase 2+)
+## iOS App — Current Status
 
-| Service              | Key Location                    |
-|----------------------|---------------------------------|
-| Firebase             | `GoogleService-Info.plist`      |
-| Google Places API    | `Info.plist` → `GMSApiKey`      |
-| RevenueCat           | `VallartAppApp.swift` init      |
-| Algolia              | `Services/SearchService.swift`  |
+### Completed
+- MainTabView (5 tabs: Explore, Map, Events, Search, Profile)
+- ExploreView — featured carousel (AsyncImage), category chips, popular grid
+- MapExploreView — MapKit pins by category, filter chips, preview card with photo
+- EventsView — featured + all events cards
+- ListingDetailView — full photo hero, info, tags, map, directions (Apple Maps + Google Maps)
+- SearchView — real-time search + filter sheet
+- ProfileView — saved listings, auth state
+- All data from Supabase (zero mock data)
+- SupabaseService, ListingRepository, EventRepository
+- AuthService — Magic Link + Apple Sign In
+- No emojis anywhere — all icons use SF Symbols SVG
+- Dark backgrounds with white text verified legible
+- Coordinates verified against Google Maps for all listings
+- Real photos from official business websites
+
+### Known Issues / Next Up
+- [ ] Images for some listings are reused (need individual photos per business)
+- [ ] User auth flow needs full testing end-to-end
+- [ ] Reviews write flow not yet implemented in app
+- [ ] Saved listings persistence not yet wired to Supabase
+- [ ] Spanish localization strings not yet added
+- [ ] Dark mode not yet tested thoroughly
 
 ---
 
-## 📌 Notes
+## Web Admin Portal — Current Status
 
-- Puerto Vallarta is **LGBT+ friendly** — Zona Romántica nightlife should have a dedicated filter/badge
-- **Whale watching** is seasonal (November–March) — listings should support seasonal availability flags
-- **Sayulita** has strong surf culture — separate sub-tags within Activities
-- All prices displayed in **MXN** by default, with USD toggle
-- Coordinate center for PV map: `lat: 20.6534, lng: -105.2253`
+### Completed
+- Next.js 14 app with App Router
+- Login page with Supabase Auth (Magic Link)
+- Protected admin routes via middleware
+- Dashboard — overview stats
+- Listings section — list, view, new, edit (with form)
+- Events section — list, view, new, edit (with form)
+- Business Owners section
+- Notifications section
+- Sidebar navigation
+- Deployed on Vercel — connected to GitHub (auto-deploy on push)
+
+### Known Issues / Next Up
+- [ ] Dashboard stats need real queries (currently static)
+- [ ] Image upload UI in listing form (currently URL input only)
+- [ ] Role-based access — distinguish super admin vs business owner
+
+---
+
+## Business Owner Subscription Tiers (planned)
+
+| Tier     | Price  | Features                                                            |
+|----------|--------|---------------------------------------------------------------------|
+| Free     | $0/mo  | Basic listing, 3 photos, reviews visible                            |
+| Standard | $29/mo | Unlimited photos, reply to reviews, contact button, analytics       |
+| Premium  | $79/mo | Featured placement, top of search, promoted map pin, booking widget |
+
+---
+
+## Development Roadmap
+
+### Done
+- iOS app core — all 5 tabs functional
+- Supabase backend — schema, RLS, real data
+- Admin web portal (Next.js + Vercel)
+- Real business listings + events in DB
+- Real photos from official business websites
+- Map with verified coordinates
+- Directions (Apple Maps + Google Maps option)
+- Zero mock data — 100% live Supabase
+
+### Next Sprint — Priority
+- [ ] Wire saved listings to Supabase (currently local only)
+- [ ] Reviews — write a review in app
+- [ ] User profile with avatar upload
+- [ ] Add more listings per category (min 5 per category)
+- [ ] Add individual real photos for each listing (some currently share similar images)
+- [ ] Spanish localization (Localizable.strings)
+
+### Future
+- [ ] RevenueCat — user premium subscription
+- [ ] Business owner self-serve portal (claim listing, edit, upload photos)
+- [ ] Push notifications (Supabase Edge Functions + APNs)
+- [ ] Offline cache (SwiftData)
+- [ ] App Store submission prep
+- [ ] Deep links (Universal Links)
+- [ ] USD / MXN price toggle
+
+---
+
+## Environments & Keys
+
+All secrets stored as environment variables — never hardcoded in source.
+
+| Variable              | Used In                        |
+|-----------------------|--------------------------------|
+| SUPABASE_URL          | iOS app, scripts, Next.js      |
+| SUPABASE_SERVICE_KEY  | Scripts only (server-side)     |
+| NEXT_PUBLIC_SUPABASE_URL | Next.js portal              |
+| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Next.js portal |
+
+iOS uses: `SupabaseService.swift` — keys set in `Info.plist` or inline constants.
+
+---
+
+## Scripts
+
+Run from project root. Require env vars set first:
+```bash
+export SUPABASE_URL=https://nvubaobivraevlnlpsjr.supabase.co
+export SUPABASE_SERVICE_KEY=your_service_key_here
+```
+
+| Script                        | What it does                                  |
+|-------------------------------|-----------------------------------------------|
+| `node scripts/seed.mjs`       | Clears and re-seeds all listings + events     |
+| `node scripts/fix_coordinates.mjs` | Corrects coordinates for specific listings |
+| `node scripts/upload_images.mjs`   | Downloads + uploads real photos to Storage |
+
+---
+
+## Geographic Coverage
+
+| Area                  | Neighborhoods in DB                        |
+|-----------------------|--------------------------------------------|
+| Puerto Vallarta       | Centro, Zona Romántica, Marina, Hotel Zone |
+| Riviera Nayarit       | Nuevo Vallarta, Bucerías, La Cruz          |
+| North Nayarit         | Punta Mita, Sayulita, San Pancho           |
+| Remote                | Yelapa                                     |
+
+Map default center: lat 20.6534, lng -105.2253
+
+---
+
+## Notes
+
+- Puerto Vallarta is LGBT+ friendly — Zona Romántica nightlife has dedicated LGBT+ badge/filter
+- Whale watching is seasonal (November–March) — listings support seasonal availability
+- Sayulita has strong surf culture — tagged within Activities
+- All prices displayed in MXN by default (USD toggle planned)
+- No emojis in the app — SF Symbols only
+- Category filter values in DB must EXACTLY match Swift enum rawValues (case sensitive)
