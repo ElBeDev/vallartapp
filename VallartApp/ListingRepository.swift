@@ -237,23 +237,3 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
         // try await supabase.rpc("recalculate_rating", params: ["p_listing_id": input.listingID.uuidString]).execute()
     }
 }
-
-// MARK: - MockListingRepository (keeps Phase 1 data working without Supabase)
-class MockListingRepository: ListingRepositoryProtocol {
-    private let data = MockDataService.shared
-
-    func fetchAll() async throws -> [Listing] { data.listings }
-    func fetchFeatured() async throws -> [Listing] { data.featuredListings }
-    func fetchByCategory(_ category: ListingCategory) async throws -> [Listing] { data.listings(for: category) }
-    func fetchByID(_ id: UUID) async throws -> Listing {
-        guard let l = data.listings.first(where: { $0.id == id }) else {
-            throw NSError(domain: "NotFound", code: 404)
-        }
-        return l
-    }
-    func search(query: String, category: ListingCategory?, neighborhood: Neighborhood?, openOnly: Bool, lgbtOnly: Bool) async throws -> [Listing] {
-        data.search(query)
-    }
-    func fetchReviews(for listingID: UUID) async throws -> [Review] { [] }
-    func submitReview(_ review: ReviewInput) async throws {}
-}

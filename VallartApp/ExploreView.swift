@@ -155,24 +155,14 @@ class ExploreViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            async let featured  = listingRepo.fetchFeatured()
-            async let popular   = listingRepo.fetchAll()
-            async let events    = eventRepo.fetchFeatured()
-            let fetchedFeatured  = try await featured
-            let fetchedPopular   = try await popular
-            let fetchedEvents    = try await events
-            // Fall back to mock data if Supabase tables are empty
-            let mock = MockDataService.shared
-            featuredListings = fetchedFeatured.isEmpty  ? mock.featuredListings : fetchedFeatured
-            popularListings  = fetchedPopular.isEmpty   ? mock.listings         : fetchedPopular
-            featuredEvents   = fetchedEvents.isEmpty    ? mock.featuredEvents   : fetchedEvents
+            async let featured = listingRepo.fetchFeatured()
+            async let popular  = listingRepo.fetchAll()
+            async let events   = eventRepo.fetchFeatured()
+            featuredListings = try await featured
+            popularListings  = try await popular
+            featuredEvents   = try await events
         } catch {
-            // Fallback to mock data if Supabase is unreachable
-            let mock = MockDataService.shared
-            featuredListings = mock.featuredListings
-            popularListings  = mock.listings
-            featuredEvents   = mock.featuredEvents
-            errorMessage     = error.localizedDescription
+            errorMessage = error.localizedDescription
         }
         isLoading = false
     }

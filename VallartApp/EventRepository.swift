@@ -164,29 +164,3 @@ class SupabaseEventRepository: EventRepositoryProtocol {
         return rows.map { $0.toEvent() }
     }
 }
-
-// MARK: - MockEventRepository
-class MockEventRepository: EventRepositoryProtocol {
-    private let data = MockDataService.shared
-
-    func fetchAll() async throws -> [Event] { data.events }
-    func fetchFeatured() async throws -> [Event] { data.featuredEvents }
-    func fetchUpcoming(limit: Int) async throws -> [Event] { Array(data.events.prefix(limit)) }
-    func fetchByID(_ id: UUID) async throws -> Event {
-        guard let e = data.events.first(where: { $0.id == id }) else {
-            throw NSError(domain: "NotFound", code: 404)
-        }
-        return e
-    }
-    func fetchFiltered(isFree: Bool?, isPublic: Bool?, isLGBT: Bool?, withinDays: Int?) async throws -> [Event] {
-        var events = data.events
-        if let free = isFree    { events = events.filter { $0.isFree == free } }
-        if let pub  = isPublic  { events = events.filter { $0.isPublic == pub } }
-        if let lgbt = isLGBT    { events = events.filter { $0.isLGBTFriendly == lgbt } }
-        if let days = withinDays {
-            let cutoff = Calendar.current.date(byAdding: .day, value: days, to: Date())!
-            events = events.filter { $0.startDate <= cutoff }
-        }
-        return events
-    }
-}
