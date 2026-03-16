@@ -46,6 +46,7 @@
 		EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		4F785E5DC365B88C957047835AE7B07E /* VallartAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VallartAppApp.swift; sourceTree = "<group>"; };
         CC3340C45202B29152467289110AC2BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		550A6A8DED74E3046A78F93A0C0494A6 /* WORKFLOW.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = WORKFLOW.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
