@@ -144,7 +144,6 @@ class ExploreViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    // Swap to MockListingRepository() / MockEventRepository() to go back to mock data
     private let listingRepo: ListingRepositoryProtocol = SupabaseListingRepository.shared
     private let eventRepo: EventRepositoryProtocol     = SupabaseEventRepository.shared
 
