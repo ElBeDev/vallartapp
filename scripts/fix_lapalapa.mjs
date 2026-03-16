@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 
 const supabase = createClient(
-  'https://nvubaobivraevlnlpsjr.supabase.co',
-  'SUPABASE_KEY_REMOVED'
+  process.env.SUPABASE_URL,
+  'process.env.SUPABASE_SERVICE_KEY'
 )
 
 const buf = fs.readFileSync('/tmp/la-palapa.jpg')

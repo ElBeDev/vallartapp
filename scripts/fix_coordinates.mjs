@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  'https://nvubaobivraevlnlpsjr.supabase.co',
-  'SUPABASE_KEY_REMOVED'
+  process.env.SUPABASE_URL,
+  'process.env.SUPABASE_SERVICE_KEY'
 )
 
 // Corrected coordinates verified against Google Maps

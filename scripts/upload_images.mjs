@@ -10,8 +10,8 @@ const TMP = path.join(__dirname, 'tmp_images')
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP)
 
 const supabase = createClient(
-  'https://nvubaobivraevlnlpsjr.supabase.co',
-  'SUPABASE_KEY_REMOVED'
+  process.env.SUPABASE_URL,
+  'process.env.SUPABASE_SERVICE_KEY'
 )
 
 const BUCKET = 'listings'
