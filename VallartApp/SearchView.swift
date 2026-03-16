@@ -183,13 +183,15 @@ class SearchViewModel: ObservableObject {
         }
         isLoading = true
         do {
-            results = try await repo.search(
+            let fetched = try await repo.search(
                 query: query,
                 category: selectedCategory,
                 neighborhood: selectedNeighborhood,
                 openOnly: openNowOnly,
                 lgbtOnly: lgbtFriendlyOnly
             )
+            // If Supabase is empty, fall back to mock
+            results = fetched.isEmpty ? MockDataService.shared.search(query) : fetched
         } catch {
             results = MockDataService.shared.search(query)
         }

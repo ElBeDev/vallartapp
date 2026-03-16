@@ -358,7 +358,9 @@ struct CategoryListView: View {
         .navTitleMode(.large)
         .task {
             do {
-                listings = try await repo.fetchByCategory(category)
+                let result = try await repo.fetchByCategory(category)
+                // If Supabase returns empty, fall back to mock data
+                listings = result.isEmpty ? MockDataService.shared.listings(for: category) : result
             } catch {
                 listings = MockDataService.shared.listings(for: category)
             }

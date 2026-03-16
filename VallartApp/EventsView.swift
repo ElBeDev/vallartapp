@@ -220,28 +220,37 @@ class EventsViewModel: ObservableObject {
     func applyFilter() async {
         isLoading = true
         do {
+            let all: [Event]
             switch filter {
-            case .all:        filteredEvents = try await repo.fetchAll()
-            case .free:       filteredEvents = try await repo.fetchFiltered(isFree: true, isPublic: nil, isLGBT: nil, withinDays: nil)
-            case .thisWeek:   filteredEvents = try await repo.fetchFiltered(isFree: nil, isPublic: nil, isLGBT: nil, withinDays: 7)
-            case .publicOnly: filteredEvents = try await repo.fetchFiltered(isFree: nil, isPublic: true, isLGBT: nil, withinDays: nil)
-            case .lgbt:       filteredEvents = try await repo.fetchFiltered(isFree: nil, isPublic: nil, isLGBT: true, withinDays: nil)
+            case .all:        all = try await repo.fetchAll()
+            case .free:       all = try await repo.fetchFiltered(isFree: true, isPublic: nil, isLGBT: nil, withinDays: nil)
+            case .thisWeek:   all = try await repo.fetchFiltered(isFree: nil, isPublic: nil, isLGBT: nil, withinDays: 7)
+            case .publicOnly: all = try await repo.fetchFiltered(isFree: nil, isPublic: true, isLGBT: nil, withinDays: nil)
+            case .lgbt:       all = try await repo.fetchFiltered(isFree: nil, isPublic: nil, isLGBT: true, withinDays: nil)
+            }
+            if all.isEmpty {
+                // Supabase returned empty — use mock
+                applyMockFilter()
+            } else {
+                filteredEvents = all
             }
         } catch {
-            // Fallback to mock
-            let mock = MockDataService.shared
-            let all = mock.events
-            switch filter {
-            case .all:        filteredEvents = all
-            case .free:       filteredEvents = all.filter { $0.isFree }
-            case .thisWeek:
-                let end = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
-                filteredEvents = all.filter { $0.startDate <= end }
-            case .publicOnly: filteredEvents = all.filter { $0.isPublic }
-            case .lgbt:       filteredEvents = all.filter { $0.isLGBTFriendly }
-            }
+            applyMockFilter()
         }
         isLoading = false
+    }
+
+    private func applyMockFilter() {
+        let all = MockDataService.shared.events
+        switch filter {
+        case .all:        filteredEvents = all
+        case .free:       filteredEvents = all.filter { $0.isFree }
+        case .thisWeek:
+            let end = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+            filteredEvents = all.filter { $0.startDate <= end }
+        case .publicOnly: filteredEvents = all.filter { $0.isPublic }
+        case .lgbt:       filteredEvents = all.filter { $0.isLGBTFriendly }
+        }
     }
 }
 

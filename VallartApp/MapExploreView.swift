@@ -78,11 +78,13 @@ class MapViewModel: ObservableObject {
     @MainActor
     func loadListings() async {
         do {
+            let result: [Listing]
             if let cat = selectedCategory {
-                allListings = try await repo.fetchByCategory(cat)
+                result = try await repo.fetchByCategory(cat)
             } else {
-                allListings = try await repo.fetchAll()
+                result = try await repo.fetchAll()
             }
+            allListings = result.isEmpty ? MockDataService.shared.listings : result
         } catch {
             allListings = MockDataService.shared.listings
         }
