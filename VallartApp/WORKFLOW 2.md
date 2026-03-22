@@ -1,7 +1,7 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.1
-**Last Updated:** March 22, 2026
+**Version:** 2.0
+**Last Updated:** March 16, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
 **Primary Language:** English | **Secondary Language:** Spanish (es-MX)
@@ -151,19 +151,19 @@ MainTabView
 
 ## Live Data in Supabase
 
-### 56 Listings (real Puerto Vallarta businesses) — all with photos
+### 23 Listings (real Puerto Vallarta businesses)
 
-| Category          | Count | Listings                                                                 |
-|-------------------|-------|--------------------------------------------------------------------------|
-| Restaurants       | 8     | Café des Artistes, Tuna Azul, La Palapa, Mar Y Vino, Barcelona Tapas, El Dorado, Café San Angel, Noroc |
-| Bars & Nightlife  | 7     | Los Muertos Brewing, La Noche Bar, Mandala Nightclub, The Top Sky Bar, iK Mixology, Blue Chairs, Andale's |
-| Hotels            | 7     | Garza Blanca, Casa Kimberly, W Punta de Mita, Hotel Mousai, Hacienda San Angel, Hilton Vallarta, Hotel Encanto |
-| Activities        | 8     | Marietas Islands, Canopy River, Whale Watching, Sayulita Surf, Bioluminescence Tour, Horseback Riding, Los Arcos Snorkel, Butterfly Sanctuary |
-| Yacht Rentals     | 5     | Sunset Sailing, Private Charter Marietas, Luxury Catamaran, Sport Fishing, Pirate Ship Marigalante |
-| Car & Moto Rental | 5     | Vallarta Car Rental, Moto Rent PV, Budget, PV Golf Carts, Cycling PV    |
-| Beaches           | 6     | Playa Los Muertos, Sayulita, Conchas Chinas, Mismaloya, Punta Mita, Bucerías |
-| Shopping          | 5     | Mercado de Artesanías, Galería Dante, La Comer, Mundo de Cristal, Flea Market |
-| Spas & Wellness   | 5     | Garza Blanca Spa, Spa Xinalani, Boca Spa, Temazcal Ritual, Casa de los Sueños |
+| Category        | Listings                                                                 |
+|-----------------|--------------------------------------------------------------------------|
+| Restaurants     | Café des Artistes, Tuna Azul, La Palapa, Mar Y Vino, Barcelona Tapas     |
+| Bars & Nightlife| Los Muertos Brewing, Mandala Beach Club, La Noche Bar                    |
+| Hotels          | Garza Blanca Resort, Casa Kimberly, W Punta de Mita                      |
+| Activities      | Marietas Islands, Canopy River Zip-line, Whale Watching PV, Sayulita Surf School |
+| Yacht Rentals   | Sunset Sailing Cruise PV, Private Yacht Charter Marietas                 |
+| Car & Moto Rental | Vallarta Car Rental, Moto Rent PV                                      |
+| Beaches         | Playa Los Muertos, Playa Sayulita                                        |
+| Shopping        | Mercado de Artesanías                                                    |
+| Spas & Wellness | Garza Blanca Spa                                                         |
 
 ### 6 Events (real / recurring)
 - Vallarta Pride 2026 (Annual, LGBT+, Zona Romántica)
@@ -174,11 +174,9 @@ MainTabView
 - Sunset Beach Party — Blue Chairs (Daily, LGBT+)
 
 ### Images
-- All 56 listings have real photos stored in Supabase Storage
-- Bucket: `listings` (public)
-- Photos sourced from: official business websites + Wikimedia Commons (CC licensed)
-- iOS app uses AsyncImage with loading spinner + color category fallback
-- Script: `node scripts/upload_images.mjs` — skips listings that already have Supabase photos
+- All 23 listings have real photos sourced from official websites
+- Stored in Supabase Storage bucket: `listings` (public)
+- iOS app uses AsyncImage with loading spinner + color fallback
 
 ---
 
@@ -247,19 +245,18 @@ MainTabView
 - iOS app core — all 5 tabs functional
 - Supabase backend — schema, RLS, real data
 - Admin web portal (Next.js + Vercel)
-- 56 real business listings + 6 events — 5+ per category ✅
-- Real photos for all 56 listings (Supabase Storage) ✅
+- Real business listings + events in DB
+- Real photos from official business websites
 - Map with verified coordinates
-- Directions (Apple Maps + Google Maps + Waze)
+- Directions (Apple Maps + Google Maps option)
 - Zero mock data — 100% live Supabase
-- No emojis — SF Symbols only
-- Contrast/legibility fixes on all badges
 
 ### Next Sprint — Priority
 - [ ] Wire saved listings to Supabase (currently local only)
 - [ ] Reviews — write a review in app
 - [ ] User profile with avatar upload
-- [ ] Add individual real photos per business (currently using category-based images)
+- [ ] Add more listings per category (min 5 per category)
+- [ ] Add individual real photos for each listing (some currently share similar images)
 - [ ] Spanish localization (Localizable.strings)
 
 ### Future

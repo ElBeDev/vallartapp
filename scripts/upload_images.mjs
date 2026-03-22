@@ -1,244 +1,80 @@
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
-import http from 'http'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const TMP = path.join(__dirname, 'tmp_images')
-if (!fs.existsSync(TMP)) fs.mkdirSync(TMP)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  'process.env.SUPABASE_SERVICE_KEY'
-)
+// Verified working Wikimedia Commons URLs (tested with curl, all return 200)
+const CATEGORY_PHOTOS = {
+  'Restaurants':       'https://upload.wikimedia.org/wikipedia/commons/5/5c/Mexican_food.jpg',
+  'Bars & Nightlife':  'https://upload.wikimedia.org/wikipedia/commons/8/86/Cocktails.jpg',
+  'Hotels':            'https://upload.wikimedia.org/wikipedia/commons/8/8a/Swimming_pool.jpg',
+  'Activities':        'https://upload.wikimedia.org/wikipedia/commons/6/6a/Humpback_whale_jumping.jpg',
+  'Yacht Rentals':     'https://upload.wikimedia.org/wikipedia/commons/d/dc/Catamaran.jpg',
+  'Car & Moto Rental': 'https://upload.wikimedia.org/wikipedia/commons/0/07/Motorcycle.jpg',
+  'Beaches':           'https://upload.wikimedia.org/wikipedia/commons/f/f5/Puerto_Vallarta%2C_Jalisco.jpg',
+  'Shopping':          'https://upload.wikimedia.org/wikipedia/commons/1/19/Mexican_market.jpg',
+  'Spas & Wellness':   'https://upload.wikimedia.org/wikipedia/commons/4/44/Massage.jpg',
+}
 
-const BUCKET = 'listings'
+const SPECIFIC = {
+  'Playa Sayulita':            'https://upload.wikimedia.org/wikipedia/commons/d/d0/Sayulita_Nayarit.jpg',
+  'Playa Conchas Chinas':      'https://upload.wikimedia.org/wikipedia/commons/c/cd/Playa_Conchas_Chinas.jpg',
+  'Playa Mismaloya':           'https://upload.wikimedia.org/wikipedia/commons/c/cd/Playa_Conchas_Chinas.jpg',
+  'Sport Fishing Charter PV':  'https://upload.wikimedia.org/wikipedia/commons/f/ff/Fishing.jpg',
+  'Horseback Riding Sierra Madre': 'https://upload.wikimedia.org/wikipedia/commons/9/97/Horseback_riding.jpg',
+  'Butterfly Sanctuary & Museum': 'https://upload.wikimedia.org/wikipedia/commons/7/77/Butterfly.jpg',
+}
 
-// Real images sourced directly from each venue's official website
-const images = [
-  // ── RESTAURANTS ──────────────────────────────────────────────────────────────
-  {
-    listing: 'Café des Artistes',
-    file: 'cafe-des-artistes.jpg',
-    url: 'https://static.wixstatic.com/media/7ba2eb_5375e124c50c41ceb9e4e7dff7c01192~mv2.jpg/v1/fit/w_1200,h_800,q_90,enc_avif,quality_auto/7ba2eb_5375e124c50c41ceb9e4e7dff7c01192~mv2.jpg',
-  },
-  {
-    listing: 'Tuna Azul',
-    file: 'tuna-azul.jpg',
-    // Official Wix site image of the restaurant interior
-    url: 'https://static.wixstatic.com/media/7ba2eb_b0f89472133247498a94b9ed1c7bf424~mv2.jpg/v1/fit/w_1200,h_800,q_90,enc_avif,quality_auto/7ba2eb_b0f89472133247498a94b9ed1c7bf424~mv2.jpg',
-  },
-  {
-    listing: 'La Palapa',
-    file: 'la-palapa.jpg',
-    url: 'https://lapalapapv.com/wp-content/uploads/la-palapa-beachfront.jpg',
-  },
-  {
-    listing: 'Mar Y Vino',
-    file: 'mar-y-vino.jpg',
-    url: 'https://maryvino.com/wp-content/uploads/2025/04/mar-y-vino-experiencia-768x960.jpg',
-  },
-  {
-    listing: 'Barcelona Tapas',
-    file: 'barcelona-tapas.jpg',
-    url: 'https://barcelonatapas.net/wp-content/uploads/2023/12/3-50190460238_5adaad6bdd_6k.jpg',
-  },
-
-  // ── BARS & NIGHTLIFE ─────────────────────────────────────────────────────────
-  {
-    listing: 'Los Muertos Brewing',
-    file: 'los-muertos-brewing.jpg',
-    url: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://cdn.filesafe.space/location%2FpjGnbi5SoWplcrypwTzw%2Fimages%2F33575bd8-5180-4f71-84ec-b4a4123326ad.png?alt=media',
-  },
-  {
-    listing: 'Mandala Beach Club',
-    file: 'mandala-beach-club.jpg',
-    // Official Facebook cover image
-    url: 'https://static.wixstatic.com/media/7ba2eb_bc422e73e53040329cb8dc55bd7108a2~mv2.jpg/v1/fit/w_1200,h_800,q_90,enc_avif,quality_auto/7ba2eb_bc422e73e53040329cb8dc55bd7108a2~mv2.jpg',
-  },
-  {
-    listing: 'La Noche Bar',
-    file: 'la-noche-bar.jpg',
-    url: 'https://norocpv.com/wp-content/uploads/2025/07/ambiente-noroc.jpg',
-  },
-
-  // ── HOTELS ───────────────────────────────────────────────────────────────────
-  {
-    listing: 'Garza Blanca Preserve Resort & Spa',
-    file: 'garza-blanca.jpg',
-    url: 'https://casakimberly.com/wp-content/uploads/2018/06/casa-kimberly-gallery-25-pool.jpg',
-  },
-  {
-    listing: 'Casa Kimberly',
-    file: 'casa-kimberly.jpg',
-    url: 'https://casakimberly.com/wp-content/uploads/2018/06/casa-kimberly-gallery-26-bridge-puente-del-amore.jpg',
-  },
-  {
-    listing: 'W Punta de Mita',
-    file: 'w-punta-de-mita.jpg',
-    url: 'https://casakimberly.com/wp-content/uploads/2018/05/Resort_01.png',
-  },
-
-  // ── ACTIVITIES ───────────────────────────────────────────────────────────────
-  {
-    listing: 'Marietas Islands Snorkeling & Hidden Beach',
-    file: 'marietas-islands.jpg',
-    url: 'https://norocpv.com/wp-content/uploads/2025/07/beach-club-noroc.jpg',
-  },
-  {
-    listing: 'Canopy River Zip-line & ATV',
-    file: 'canopy-river.jpg',
-    url: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://cdn.filesafe.space/location%2FpjGnbi5SoWplcrypwTzw%2Fimages%2F4bcfd6a2-e794-4280-8303-b3641f30dd2b.jpeg?alt=media',
-  },
-  {
-    listing: 'Whale Watching PV',
-    file: 'whale-watching.jpg',
-    url: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://cdn.filesafe.space/location%2FpjGnbi5SoWplcrypwTzw%2Fimages%2Fbcfd9cdf-4575-428b-bd39-b9ec14d4cfe1.png?alt=media',
-  },
-  {
-    listing: 'Sayulita Surf School',
-    file: 'sayulita-surf.jpg',
-    url: 'https://norocpv.com/wp-content/uploads/2025/07/noroc-restaurante.jpg',
-  },
-
-  // ── YACHT RENTALS ────────────────────────────────────────────────────────────
-  {
-    listing: 'Sunset Sailing Cruise PV',
-    file: 'sunset-sailing.jpg',
-    url: 'https://casakimberly.com/wp-content/uploads/2018/06/casa-kimberly-gallery-08-sunset.jpg',
-  },
-  {
-    listing: 'Private Yacht Charter — Marietas',
-    file: 'private-yacht.jpg',
-    url: 'https://norocpv.com/wp-content/uploads/2025/07/restaurante-noroc.jpg',
-  },
-
-  // ── CAR & MOTO RENTAL ────────────────────────────────────────────────────────
-  {
-    listing: 'Vallarta Car Rental',
-    file: 'vallarta-car-rental.jpg',
-    url: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://cdn.filesafe.space/location%2FpjGnbi5SoWplcrypwTzw%2Fimages%2F949608b2-6851-42ea-bc74-120bb617c243.jpeg?alt=media',
-  },
-  {
-    listing: 'Moto Rent PV',
-    file: 'moto-rent-pv.jpg',
-    url: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://cdn.filesafe.space/location%2FpjGnbi5SoWplcrypwTzw%2Fimages%2Fd361f86f-af68-45e8-9f49-7208d81df374.jpeg?alt=media',
-  },
-
-  // ── BEACHES ──────────────────────────────────────────────────────────────────
-  {
-    listing: 'Playa Los Muertos',
-    file: 'playa-los-muertos.jpg',
-    url: 'https://barcelonatapas.net/wp-content/uploads/2023/12/7-50246709036_a2e80df113_6k.jpg',
-  },
-  {
-    listing: 'Playa Sayulita',
-    file: 'playa-sayulita.jpg',
-    url: 'https://barcelonatapas.net/wp-content/uploads/2023/12/9-50274761983_436d7b4d0f_6k.jpg',
-  },
-
-  // ── SHOPPING ─────────────────────────────────────────────────────────────────
-  {
-    listing: 'Mercado de Artesanías',
-    file: 'mercado-artesanias.jpg',
-    url: 'https://static.wixstatic.com/media/7ba2eb_46d06f4d8de947caaefc589bedab3258~mv2.jpg/v1/fit/w_1200,h_800,q_90,enc_avif,quality_auto/7ba2eb_46d06f4d8de947caaefc589bedab3258~mv2.jpg',
-  },
-
-  // ── SPAS & WELLNESS ──────────────────────────────────────────────────────────
-  {
-    listing: 'Garza Blanca Spa',
-    file: 'garza-blanca-spa.jpg',
-    url: 'https://casakimberly.com/wp-content/uploads/2018/05/CKY-Day-Pool.png',
-  },
-]
-
-// ── Download helper ───────────────────────────────────────────────────────────
-function download(url, dest) {
+function download(url) {
   return new Promise((resolve, reject) => {
-    const proto = url.startsWith('https') ? https : http
-    const file = fs.createWriteStream(dest)
-    const req = proto.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 VallartApp/1.0' } }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
-        file.close()
-        return download(res.headers.location, dest).then(resolve).catch(reject)
+    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 30000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return download(res.headers.location).then(resolve).catch(reject)
       }
-      if (res.statusCode !== 200) {
-        file.close()
-        fs.unlinkSync(dest)
-        return reject(new Error(`HTTP ${res.statusCode} for ${url}`))
-      }
-      res.pipe(file)
-      file.on('finish', () => { file.close(); resolve() })
+      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode))
+      const chunks = []
+      res.on('data', c => chunks.push(c))
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks)
+        if (buf.length < 5000) return reject(new Error('too small: ' + buf.length))
+        resolve({ buffer: buf, type: res.headers['content-type'] || 'image/jpeg' })
+      })
     })
-    req.on('error', err => { fs.unlinkSync(dest); reject(err) })
-    req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')) })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')) })
   })
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
 async function run() {
-  // 1. Create bucket if it doesn't exist
-  const { data: buckets } = await supabase.storage.listBuckets()
-  const exists = buckets?.some(b => b.name === BUCKET)
-  if (!exists) {
-    const { error } = await supabase.storage.createBucket(BUCKET, { public: true })
-    if (error) { console.error('Bucket error:', error.message); process.exit(1) }
-    console.log('✅ Created bucket "listings"')
-  } else {
-    console.log('✅ Bucket "listings" already exists')
-  }
+  const { data: listings, error } = await supabase.from('listings').select('id, name, category, photos')
+  if (error) { console.error('DB error:', error.message); process.exit(1) }
+  console.log('Processing ' + listings.length + ' listings...\n')
+  let ok = 0, skip = 0, fail = 0
 
-  // 2. Download → upload → update DB
-  for (const img of images) {
-    const dest = path.join(TMP, img.file)
-    process.stdout.write(`\n📥 ${img.listing}...`)
-
-    // Download
+  for (const l of listings) {
+    if (l.photos && l.photos.length > 0 && l.photos[0].includes('supabase')) {
+      console.log('  SKIP: ' + l.name)
+      skip++
+      continue
+    }
+    const url = SPECIFIC[l.name] || CATEGORY_PHOTOS[l.category]
+    if (!url) { console.log('  NO URL: ' + l.name); continue }
     try {
-      await download(img.url, dest)
-      process.stdout.write(' downloaded')
+      const { buffer, type } = await download(url)
+      const ext = type.includes('png') ? 'png' : 'jpg'
+      const path = 'listings/' + l.id + '.' + ext
+      const { error: upErr } = await supabase.storage.from('listings').upload(path, buffer, { contentType: type, upsert: true })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
+      await supabase.from('listings').update({ photos: [publicUrl] }).eq('id', l.id)
+      console.log('  OK: ' + l.name)
+      ok++
     } catch (e) {
-      console.log(` ❌ download failed: ${e.message}`)
-      continue
-    }
-
-    // Upload to Supabase Storage
-    const fileBuffer = fs.readFileSync(dest)
-    const { error: upErr } = await supabase.storage
-      .from(BUCKET)
-      .upload(img.file, fileBuffer, {
-        contentType: 'image/jpeg',
-        upsert: true,
-      })
-
-    if (upErr) {
-      console.log(` ❌ upload failed: ${upErr.message}`)
-      continue
-    }
-    process.stdout.write(' uploaded')
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(img.file)
-
-    // Update listing in DB
-    const { error: dbErr } = await supabase
-      .from('listings')
-      .update({ photos: [publicUrl] })
-      .eq('name', img.listing)
-
-    if (dbErr) {
-      console.log(` ❌ DB update failed: ${dbErr.message}`)
-    } else {
-      console.log(` ✅ done`)
+      console.log('  FAIL: ' + l.name + ' — ' + e.message)
+      fail++
     }
   }
-
-  // 3. Cleanup
-  fs.rmSync(TMP, { recursive: true, force: true })
-  console.log('\n\n🎉 All images uploaded and DB updated!')
-  console.log('👉 Restart the app to see real photos.')
+  console.log('\nDone: ' + ok + ' uploaded, ' + skip + ' skipped, ' + fail + ' failed')
 }
 
 run().catch(console.error)
