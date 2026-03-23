@@ -8,6 +8,7 @@ struct ListingDetailView: View {
     @State private var reviews: [Review] = []
     @State private var reviewsLoaded = false
     @State private var showDirectionsSheet = false
+    @State private var showWriteReview = false
     private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
 
     var isSaved: Bool { auth.isSaved(listing.id) }
@@ -55,6 +56,11 @@ struct ListingDetailView: View {
         }
         .ignoresSafeArea(edges: .top)
         .navTitleMode(.inline)
+        .sheet(isPresented: $showWriteReview) {
+            WriteReviewView(listing: listing) { newReview in
+                reviews.insert(newReview, at: 0)
+            }
+        }
         .confirmationDialog("Open directions in...", isPresented: $showDirectionsSheet, titleVisibility: .visible) {
             // Apple Maps
             Button("Apple Maps") {
@@ -316,14 +322,43 @@ struct ListingDetailView: View {
     // MARK: Reviews
     private var reviewsSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            Text("Reviews")
-                .font(AppTheme.Font.headline())
-                .foregroundStyle(AppTheme.Colors.deepNavy)
+            HStack {
+                Text("Reviews")
+                    .font(AppTheme.Font.headline())
+                    .foregroundStyle(AppTheme.Colors.deepNavy)
+                Spacer()
+                Button {
+                    showWriteReview = true
+                } label: {
+                    Label("Write a Review", systemImage: "square.and.pencil")
+                        .font(AppTheme.Font.caption())
+                        .foregroundStyle(AppTheme.Colors.coral)
+                }
+            }
 
             if reviews.isEmpty {
-                Text(reviewsLoaded ? "No reviews yet. Be the first!" : "Loading reviews...")
-                    .font(AppTheme.Font.body())
-                    .foregroundStyle(AppTheme.Colors.mediumGray)
+                VStack(spacing: AppTheme.Spacing.sm) {
+                    Text(reviewsLoaded ? "No reviews yet. Be the first!" : "Loading reviews...")
+                        .font(AppTheme.Font.body())
+                        .foregroundStyle(AppTheme.Colors.mediumGray)
+                    if reviewsLoaded {
+                        Button {
+                            showWriteReview = true
+                        } label: {
+                            Text("Write the first review")
+                                .font(AppTheme.Font.label())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, AppTheme.Spacing.lg)
+                                .padding(.vertical, AppTheme.Spacing.sm)
+                                .background(AppTheme.Colors.coral)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(AppTheme.Spacing.md)
+                .background(AppTheme.Colors.white)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             } else {
                 ForEach(reviews.prefix(5)) { review in
                     ReviewRowView(review: review)

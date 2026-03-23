@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import Supabase
 import AuthenticationServices
+import UIKit
 
 // MARK: - AuthService
 // Handles all authentication: Apple, Google, Email/Password, Magic Link.
@@ -179,6 +180,60 @@ class AuthService: ObservableObject {
 
     func isSaved(_ listingID: UUID) -> Bool {
         profile?.savedListingIds.contains(listingID.uuidString) ?? false
+    }
+
+    // MARK: - Update Profile Name
+    func updateName(_ newName: String) async {
+        guard let uid = currentUserID else { return }
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["name": newName])
+                .eq("id", value: uid.uuidString)
+                .execute()
+            profile?.name = newName
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Upload Avatar
+    func uploadAvatar(_ image: UIImage) async -> String? {
+        guard let uid = currentUserID,
+              let data = image.jpegData(compressionQuality: 0.7) else { return nil }
+        let path = "avatars/\(uid.uuidString).jpg"
+        do {
+            try await supabase.storage
+                .from("listings")
+                .upload(path, data: data, options: FileOptions(contentType: "image/jpeg", upsert: true))
+            let url = try supabase.storage.from("listings").getPublicURL(path: path).absoluteString
+            try await supabase
+                .from("profiles")
+                .update(["avatar_url": url])
+                .eq("id", value: uid.uuidString)
+                .execute()
+            profile?.avatarUrl = url
+            return url
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    // MARK: - Fetch Saved Listings
+    func fetchSavedListings() async -> [Listing] {
+        guard let profile, !profile.savedListingIds.isEmpty else { return [] }
+        do {
+            let rows: [ListingRow] = try await supabase
+                .from("listings")
+                .select()
+                .in("id", values: profile.savedListingIds)
+                .execute()
+                .value
+            return rows.map { $0.toListing() }
+        } catch {
+            return []
+        }
     }
 
     // MARK: - Private helpers

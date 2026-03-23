@@ -1,0 +1,149 @@
+/* ──────────────────────────────────────────
+   VallartApp — Español (es-MX)
+   ────────────────────────────────────────── */
+
+/* Tab Bar */
+"tab.explore"    = "Explorar";
+"tab.search"     = "Buscar";
+"tab.events"     = "Eventos";
+"tab.map"        = "Mapa";
+"tab.profile"    = "Perfil";
+
+/* Explore Screen */
+"explore.greeting.morning"   = "Buenos días";
+"explore.greeting.afternoon" = "Buenas tardes";
+"explore.greeting.evening"   = "Buenas noches";
+"explore.title"              = "Puerto Vallarta";
+"explore.subtitle"           = "y Riviera Nayarit";
+"explore.section.explore"    = "Explorar";
+"explore.section.featured"   = "Popular Ahora";
+"explore.section.events"     = "Próximos Eventos";
+"explore.section.all"        = "Todos los Lugares";
+"explore.seeAll"             = "Ver todo";
+
+/* Search Screen */
+"search.title"               = "Buscar";
+"search.placeholder"         = "Restaurantes, bares, actividades...";
+"search.results"             = "%d resultados";
+"search.noResults"           = "Sin resultados";
+"search.noResultsHint"       = "Prueba otras palabras clave o filtros";
+"search.browseBy"            = "Explorar por categoría";
+"search.filters.title"       = "Filtros";
+"search.filters.category"    = "Categoría";
+"search.filters.neighborhood"= "Colonia";
+"search.filters.options"     = "Opciones";
+"search.filters.openNow"     = "Abierto Ahora";
+"search.filters.lgbt"        = "LGBT+ Friendly";
+"search.filters.clearAll"    = "Borrar Filtros";
+"search.filters.apply"       = "Aplicar";
+"search.filters.all"         = "Todo";
+
+/* Events Screen */
+"events.title"               = "Eventos";
+"events.filter.all"          = "Todos";
+"events.filter.free"         = "Gratis";
+"events.filter.thisWeek"     = "Esta Semana";
+"events.filter.public"       = "Público";
+"events.filter.lgbt"         = "LGBT+";
+"events.noEvents"            = "Sin eventos";
+"events.noEventsHint"        = "Prueba un filtro diferente";
+"events.badge.public"        = "Público";
+"events.badge.private"       = "Privado";
+"events.badge.free"          = "Gratis";
+"events.organizedBy"         = "Organizado por";
+"events.ticketsFrom"         = "Boletos desde";
+"events.getTickets"          = "Comprar Boletos";
+"events.about"               = "Acerca de";
+
+/* Listing Detail */
+"listing.about"              = "Acerca de";
+"listing.location"           = "Ubicación";
+"listing.reviews"            = "Reseñas";
+"listing.writeReview"        = "Escribir Reseña";
+"listing.firstReview"        = "Escribir la primera reseña";
+"listing.noReviews"          = "Sin reseñas aún. ¡Sé el primero!";
+"listing.loadingReviews"     = "Cargando reseñas...";
+"listing.navigate"           = "Cómo llegar";
+"listing.open"               = "Abierto";
+"listing.closed"             = "Cerrado";
+"listing.call"               = "Llamar";
+"listing.website"            = "Sitio web";
+"listing.share"              = "Compartir";
+"listing.save"               = "Guardar";
+"listing.saved"              = "Guardado";
+"listing.directions.title"   = "Abrir indicaciones en...";
+"listing.directions.apple"   = "Apple Maps";
+"listing.directions.google"  = "Google Maps";
+"listing.directions.waze"    = "Waze";
+"listing.directions.cancel"  = "Cancelar";
+
+/* Write Review */
+"review.title"               = "Escribir Reseña";
+"review.rating"              = "Tu calificación";
+"review.placeholder"         = "Cuéntale a otros sobre tu experiencia";
+"review.charCount"           = "%d/500";
+"review.submit"              = "Publicar Reseña";
+"review.signInRequired"      = "Inicia sesión para escribir una reseña.";
+"review.cancel"              = "Cancelar";
+
+/* Profile Screen */
+"profile.title"              = "Perfil";
+"profile.welcome"            = "Bienvenido a VallartApp";
+"profile.welcomeHint"        = "Inicia sesión para guardar favoritos, escribir reseñas y más.";
+"profile.signIn"             = "Iniciar Sesión / Crear Cuenta";
+"profile.business.cta"       = "¿Tienes un negocio en Puerto Vallarta?";
+"profile.business.hint"      = "Lista tu negocio y llega a miles de turistas";
+"profile.business.add"       = "Agregar Mi Negocio";
+"profile.stats.reviews"      = "Reseñas";
+"profile.stats.saved"        = "Guardados";
+"profile.stats.photos"       = "Fotos";
+"profile.menu.saved"         = "Lugares Guardados";
+"profile.menu.reviews"       = "Mis Reseñas";
+"profile.menu.business"      = "Mi Negocio";
+"profile.menu.notifications" = "Notificaciones";
+"profile.menu.settings"      = "Configuración";
+"profile.signOut"            = "Cerrar Sesión";
+"profile.editName"           = "Editar Nombre";
+"profile.namePlaceholder"    = "Tu nombre";
+"profile.save"               = "Guardar";
+"profile.cancel"             = "Cancelar";
+
+/* Saved Places */
+"saved.title"                = "Lugares Guardados";
+"saved.empty"                = "Sin lugares guardados";
+"saved.emptyHint"            = "Toca el corazón en cualquier lugar para guardarlo aquí.";
+"saved.remove"               = "Quitar";
+"saved.seeAll"               = "Ver todo (%d)";
+"saved.done"                 = "Listo";
+
+/* Login */
+"login.title"                = "VallartApp";
+"login.subtitle"             = "Puerto Vallarta en tu bolsillo";
+"login.signIn"               = "Iniciar Sesión";
+"login.signUp"               = "Registrarse";
+"login.magicLink"            = "Magic Link";
+"login.email"                = "Correo";
+"login.password"             = "Contraseña";
+"login.fullName"             = "Nombre Completo";
+"login.signInButton"         = "Iniciar Sesión";
+"login.createAccount"        = "Crear Cuenta";
+"login.sendMagicLink"        = "Enviar Magic Link";
+"login.or"                   = "o";
+"login.apple"                = "Iniciar con Apple";
+"login.google"               = "Iniciar con Google";
+"login.magicSent"            = "¡Revisa tu correo!";
+"login.magicSentHint"        = "Enviamos un enlace a %@. Tócalo para iniciar sesión.";
+"login.cancel"               = "Cancelar";
+
+/* Map Screen */
+"map.title"                  = "Mapa";
+"map.filter.all"             = "Todos";
+"map.filter.open"            = "Abierto Ahora";
+"map.filter.featured"        = "Destacados";
+
+/* General */
+"general.loading"            = "Cargando...";
+"general.retry"              = "Reintentar";
+"general.done"               = "Listo";
+"general.ok"                 = "OK";
+"general.error"              = "Algo salió mal";

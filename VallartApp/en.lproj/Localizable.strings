@@ -1,0 +1,149 @@
+/* ──────────────────────────────────────────
+   VallartApp — English (Base)
+   ────────────────────────────────────────── */
+
+/* Tab Bar */
+"tab.explore"    = "Explore";
+"tab.search"     = "Search";
+"tab.events"     = "Events";
+"tab.map"        = "Map";
+"tab.profile"    = "Profile";
+
+/* Explore Screen */
+"explore.greeting.morning"   = "Good morning";
+"explore.greeting.afternoon" = "Good afternoon";
+"explore.greeting.evening"   = "Good evening";
+"explore.title"              = "Puerto Vallarta";
+"explore.subtitle"           = "& Riviera Nayarit";
+"explore.section.explore"    = "Explore";
+"explore.section.featured"   = "Popular Right Now";
+"explore.section.events"     = "Upcoming Events";
+"explore.section.all"        = "All Places";
+"explore.seeAll"             = "See all";
+
+/* Search Screen */
+"search.title"               = "Search";
+"search.placeholder"         = "Restaurants, bars, activities...";
+"search.results"             = "%d results";
+"search.noResults"           = "No results found";
+"search.noResultsHint"       = "Try different keywords or filters";
+"search.browseBy"            = "Browse by category";
+"search.filters.title"       = "Filters";
+"search.filters.category"    = "Category";
+"search.filters.neighborhood"= "Neighborhood";
+"search.filters.options"     = "Options";
+"search.filters.openNow"     = "Open Now";
+"search.filters.lgbt"        = "LGBT+ Friendly";
+"search.filters.clearAll"    = "Clear All Filters";
+"search.filters.apply"       = "Apply";
+"search.filters.all"         = "All";
+
+/* Events Screen */
+"events.title"               = "Events";
+"events.filter.all"          = "All";
+"events.filter.free"         = "Free";
+"events.filter.thisWeek"     = "This Week";
+"events.filter.public"       = "Public";
+"events.filter.lgbt"         = "LGBT+";
+"events.noEvents"            = "No events found";
+"events.noEventsHint"        = "Try a different filter";
+"events.badge.public"        = "Public";
+"events.badge.private"       = "Private";
+"events.badge.free"          = "Free";
+"events.organizedBy"         = "Organized by";
+"events.ticketsFrom"         = "Tickets from";
+"events.getTickets"          = "Get Tickets";
+"events.about"               = "About";
+
+/* Listing Detail */
+"listing.about"              = "About";
+"listing.location"           = "Location";
+"listing.reviews"            = "Reviews";
+"listing.writeReview"        = "Write a Review";
+"listing.firstReview"        = "Write the first review";
+"listing.noReviews"          = "No reviews yet. Be the first!";
+"listing.loadingReviews"     = "Loading reviews...";
+"listing.navigate"           = "Navigate";
+"listing.open"               = "Open";
+"listing.closed"             = "Closed";
+"listing.call"               = "Call";
+"listing.website"            = "Website";
+"listing.share"              = "Share";
+"listing.save"               = "Save";
+"listing.saved"              = "Saved";
+"listing.directions.title"   = "Open directions in...";
+"listing.directions.apple"   = "Apple Maps";
+"listing.directions.google"  = "Google Maps";
+"listing.directions.waze"    = "Waze";
+"listing.directions.cancel"  = "Cancel";
+
+/* Write Review */
+"review.title"               = "Write a Review";
+"review.rating"              = "Your rating";
+"review.placeholder"         = "Tell others about your experience";
+"review.charCount"           = "%d/500";
+"review.submit"              = "Submit Review";
+"review.signInRequired"      = "Please sign in to write a review.";
+"review.cancel"              = "Cancel";
+
+/* Profile Screen */
+"profile.title"              = "Profile";
+"profile.welcome"            = "Welcome to VallartApp";
+"profile.welcomeHint"        = "Sign in to save favorites, write reviews, and more.";
+"profile.signIn"             = "Sign In / Create Account";
+"profile.business.cta"       = "Own a business in Puerto Vallarta?";
+"profile.business.hint"      = "List your business and reach thousands of tourists";
+"profile.business.add"       = "Add Your Business";
+"profile.stats.reviews"      = "Reviews";
+"profile.stats.saved"        = "Saved";
+"profile.stats.photos"       = "Photos";
+"profile.menu.saved"         = "Saved Places";
+"profile.menu.reviews"       = "My Reviews";
+"profile.menu.business"      = "My Business";
+"profile.menu.notifications" = "Notifications";
+"profile.menu.settings"      = "Settings";
+"profile.signOut"            = "Sign Out";
+"profile.editName"           = "Edit Name";
+"profile.namePlaceholder"    = "Your name";
+"profile.save"               = "Save";
+"profile.cancel"             = "Cancel";
+
+/* Saved Places */
+"saved.title"                = "Saved Places";
+"saved.empty"                = "No saved places yet";
+"saved.emptyHint"            = "Tap the heart icon on any listing to save it here.";
+"saved.remove"               = "Remove";
+"saved.seeAll"               = "See all (%d)";
+"saved.done"                 = "Done";
+
+/* Login */
+"login.title"                = "VallartApp";
+"login.subtitle"             = "Puerto Vallarta in your pocket";
+"login.signIn"               = "Sign In";
+"login.signUp"               = "Sign Up";
+"login.magicLink"            = "Magic Link";
+"login.email"                = "Email";
+"login.password"             = "Password";
+"login.fullName"             = "Full Name";
+"login.signInButton"         = "Sign In";
+"login.createAccount"        = "Create Account";
+"login.sendMagicLink"        = "Send Magic Link";
+"login.or"                   = "or";
+"login.apple"                = "Sign in with Apple";
+"login.google"               = "Sign in with Google";
+"login.magicSent"            = "Check your email!";
+"login.magicSentHint"        = "We sent a magic link to %@. Tap it to sign in — no password needed.";
+"login.cancel"               = "Cancel";
+
+/* Map Screen */
+"map.title"                  = "Map";
+"map.filter.all"             = "All";
+"map.filter.open"            = "Open Now";
+"map.filter.featured"        = "Featured";
+
+/* General */
+"general.loading"            = "Loading...";
+"general.retry"              = "Retry";
+"general.done"               = "Done";
+"general.ok"                 = "OK";
+"general.error"              = "Something went wrong";

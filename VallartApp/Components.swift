@@ -405,3 +405,170 @@ struct FlowTagsView: View {
         }
     }
 }
+
+// MARK: - WriteReviewView
+struct WriteReviewView: View {
+    let listing: Listing
+    let onSubmitted: (Review) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var auth = AuthService.shared
+    @State private var rating: Int = 5
+    @State private var reviewText = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String?
+
+    private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                AppTheme.Colors.sand.ignoresSafeArea()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
+
+                        // Listing info
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
+                                .fill(AppTheme.Colors.coral.opacity(0.1))
+                                .frame(width: 50, height: 50)
+                                .overlay {
+                                    Image(systemName: listing.category.icon)
+                                        .font(.system(size: 22))
+                                        .foregroundStyle(AppTheme.Colors.coral)
+                                }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(listing.name)
+                                    .font(AppTheme.Font.headline())
+                                    .foregroundStyle(AppTheme.Colors.deepNavy)
+                                Text(listing.category.rawValue)
+                                    .font(AppTheme.Font.caption())
+                                    .foregroundStyle(AppTheme.Colors.mediumGray)
+                            }
+                        }
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.white)
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+
+                        // Star rating
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                            Text("Your rating")
+                                .font(AppTheme.Font.label())
+                                .foregroundStyle(AppTheme.Colors.deepNavy)
+                            HStack(spacing: 8) {
+                                ForEach(1...5, id: \.self) { star in
+                                    Button {
+                                        rating = star
+                                    } label: {
+                                        Image(systemName: star <= rating ? "star.fill" : "star")
+                                            .font(.system(size: 36))
+                                            .foregroundStyle(star <= rating ? AppTheme.Colors.goldenSun : AppTheme.Colors.mediumGray.opacity(0.4))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.white)
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+
+                        // Review text
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                            Text("Tell others about your experience")
+                                .font(AppTheme.Font.label())
+                                .foregroundStyle(AppTheme.Colors.deepNavy)
+                            TextEditor(text: $reviewText)
+                                .font(AppTheme.Font.body())
+                                .frame(minHeight: 140)
+                                .padding(AppTheme.Spacing.sm)
+                                .background(AppTheme.Colors.sand)
+                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
+                                        .strokeBorder(AppTheme.Colors.mediumGray.opacity(0.3), lineWidth: 1)
+                                }
+                            Text("\(reviewText.count)/500")
+                                .font(AppTheme.Font.caption())
+                                .foregroundStyle(AppTheme.Colors.mediumGray)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.white)
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+
+                        if let err = errorMessage {
+                            Text(err)
+                                .font(AppTheme.Font.caption())
+                                .foregroundStyle(AppTheme.Colors.coral)
+                                .padding(.horizontal, AppTheme.Spacing.md)
+                        }
+
+                        // Submit button
+                        Button {
+                            Task { await submit() }
+                        } label: {
+                            Group {
+                                if isSubmitting {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Text("Submit Review")
+                                        .font(AppTheme.Font.headline())
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(AppTheme.Spacing.md)
+                            .background(reviewText.count >= 10 ? AppTheme.Colors.coral : AppTheme.Colors.mediumGray.opacity(0.4))
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.full))
+                        }
+                        .disabled(reviewText.count < 10 || isSubmitting)
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                    }
+                    .padding(AppTheme.Spacing.md)
+                }
+            }
+            .navigationTitle("Write a Review")
+            .navTitleMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func submit() async {
+        guard let uid = auth.currentUserID else {
+            errorMessage = "Please sign in to write a review."
+            return
+        }
+        isSubmitting = true
+        errorMessage = nil
+        let input = ReviewInput(
+            listingID: listing.id,
+            userID: uid,
+            authorName: auth.profile?.name ?? "Traveler",
+            rating: Double(rating),
+            text: reviewText.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        do {
+            try await repo.submitReview(input)
+            // Build a local Review to insert immediately into the list
+            let newReview = Review(
+                id: UUID(),
+                listingID: listing.id,
+                authorName: input.authorName,
+                authorAvatar: "person.circle.fill",
+                rating: input.rating,
+                text: input.text,
+                date: Date(),
+                photos: []
+            )
+            onSubmitted(newReview)
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isSubmitting = false
+    }
+}

@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.1
+**Version:** 2.2
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -201,11 +201,8 @@ MainTabView
 - Real photos from official business websites
 
 ### Known Issues / Next Up
-- [ ] Images for some listings are reused (need individual photos per business)
-- [ ] User auth flow needs full testing end-to-end
-- [ ] Reviews write flow not yet implemented in app
-- [ ] Saved listings persistence not yet wired to Supabase
-- [ ] Spanish localization strings not yet added
+- [ ] Images for most listings are category-level, not individual per business
+- [ ] Reviews write flow needs end-to-end testing with a real auth session
 - [ ] Dark mode not yet tested thoroughly
 
 ---
@@ -248,19 +245,29 @@ MainTabView
 - Supabase backend — schema, RLS, real data
 - Admin web portal (Next.js + Vercel)
 - 56 real business listings + 6 events — 5+ per category ✅
-- Real photos for all 56 listings (Supabase Storage) ✅
+- Real photos for all 56 listings + 6 events (Supabase Storage) ✅
 - Map with verified coordinates
 - Directions (Apple Maps + Google Maps + Waze)
 - Zero mock data — 100% live Supabase
 - No emojis — SF Symbols only
 - Contrast/legibility fixes on all badges
+- Saved listings wired to Supabase — persists between sessions ✅
+- Write a Review flow in ListingDetailView ✅
+- User profile — avatar upload + edit name ✅
+- Spanish localization (en.lproj + es.lproj Localizable.strings) ✅
+- Dynamic time-based greeting (morning/afternoon/evening) ✅
+- EventDetailView hero — real photo from Supabase Storage ✅
+- Admin dashboard — category breakdown table with progress bars ✅
 
 ### Next Sprint — Priority
-- [ ] Wire saved listings to Supabase (currently local only)
-- [ ] Reviews — write a review in app
-- [ ] User profile with avatar upload
 - [ ] Add individual real photos per business (currently using category-based images)
-- [ ] Spanish localization (Localizable.strings)
+- [ ] Wire "My Reviews" list in Profile to show actual user reviews
+- [ ] Stats counters (Reviews, Photos) in Profile use real counts from Supabase
+- [ ] RevenueCat — user premium subscription
+- [ ] Business owner self-serve portal (claim listing, edit, upload photos)
+- [ ] Push notifications (Supabase Edge Functions + APNs)
+- [ ] Offline cache (SwiftData)
+- [ ] App Store submission prep
 
 ### Future
 - [ ] RevenueCat — user premium subscription

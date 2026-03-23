@@ -44,22 +44,31 @@ struct ExploreView: View {
     // MARK: Header
     private var headerView: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
-            Text("Buenos días")
+            Text(timeGreeting)
                 .font(AppTheme.Font.caption())
                 .foregroundStyle(AppTheme.Colors.mediumGray)
-            Text("Puerto Vallarta")
+            Text(String(localized: "explore.title"))
                 .font(AppTheme.Font.display(30))
                 .foregroundStyle(AppTheme.Colors.deepNavy)
-            Text("& Riviera Nayarit")
+            Text(String(localized: "explore.subtitle"))
                 .font(AppTheme.Font.headline(18))
                 .foregroundStyle(AppTheme.Colors.coral)
+        }
+    }
+
+    private var timeGreeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:  return String(localized: "explore.greeting.morning")
+        case 12..<19: return String(localized: "explore.greeting.afternoon")
+        default:      return String(localized: "explore.greeting.evening")
         }
     }
 
     // MARK: Category Grid
     private var categoryGrid: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            Text("Explore")
+            Text(String(localized: "explore.section.explore"))
                 .font(AppTheme.Font.headline())
                 .foregroundStyle(AppTheme.Colors.deepNavy)
                 .padding(.horizontal, AppTheme.Spacing.md)
@@ -80,7 +89,7 @@ struct ExploreView: View {
     // MARK: Featured Section
     private var featuredSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            SectionHeaderView(title: "Featured", subtitle: "Editor's picks")
+            SectionHeaderView(title: String(localized: "explore.section.featured"), subtitle: "Editor's picks")
                 .padding(.horizontal, AppTheme.Spacing.md)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -100,7 +109,7 @@ struct ExploreView: View {
     // MARK: Upcoming Events
     private var upcomingEventsSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            SectionHeaderView(title: "Upcoming Events", subtitle: "Don't miss out")
+            SectionHeaderView(title: String(localized: "explore.section.events"), subtitle: "Don't miss out")
                 .padding(.horizontal, AppTheme.Spacing.md)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -120,7 +129,7 @@ struct ExploreView: View {
     // MARK: All Listings
     private var allListingsSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            SectionHeaderView(title: "Popular Right Now", subtitle: "Top rated in PV")
+            SectionHeaderView(title: String(localized: "explore.section.all"), subtitle: "Top rated in PV")
                 .padding(.horizontal, AppTheme.Spacing.md)
 
             LazyVStack(spacing: AppTheme.Spacing.sm) {

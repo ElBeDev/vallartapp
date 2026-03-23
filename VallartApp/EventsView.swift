@@ -44,11 +44,11 @@ struct EventsView: View {
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: AppTheme.Spacing.sm) {
-                FilterChip(title: "All", isSelected: vm.filter == .all) { vm.filter = .all }
-                FilterChip(title: "Free", isSelected: vm.filter == .free) { vm.filter = .free }
-                FilterChip(title: "This Week", isSelected: vm.filter == .thisWeek) { vm.filter = .thisWeek }
-                FilterChip(title: "Public", isSelected: vm.filter == .publicOnly) { vm.filter = .publicOnly }
-                FilterChip(title: "LGBT+", isSelected: vm.filter == .lgbt) { vm.filter = .lgbt }
+                FilterChip(title: String(localized: "events.filter.all"),      isSelected: vm.filter == .all)      { vm.filter = .all }
+                FilterChip(title: String(localized: "events.filter.free"),     isSelected: vm.filter == .free)     { vm.filter = .free }
+                FilterChip(title: String(localized: "events.filter.thisWeek"), isSelected: vm.filter == .thisWeek) { vm.filter = .thisWeek }
+                FilterChip(title: String(localized: "events.filter.public"),   isSelected: vm.filter == .publicOnly) { vm.filter = .publicOnly }
+                FilterChip(title: String(localized: "events.filter.lgbt"),     isSelected: vm.filter == .lgbt)     { vm.filter = .lgbt }
             }
             .padding(.horizontal, AppTheme.Spacing.md)
         }
@@ -80,21 +80,38 @@ struct EventDetailView: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Hero
                 ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 0)
-                        .fill(AppTheme.Colors.coral.opacity(0.15))
-                        .frame(height: 260)
-                        .overlay {
-                            Image(systemName: event.heroPhoto)
-                                .font(.system(size: 80))
-                                .foregroundStyle(AppTheme.Colors.coral)
+                    // Real photo or gradient fallback
+                    Group {
+                        if let photoUrl = event.photos.first, let url = URL(string: photoUrl) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let img):
+                                    img.resizable().scaledToFill()
+                                default:
+                                    heroFallback
+                                }
+                            }
+                        } else {
+                            heroFallback
                         }
+                    }
+                    .frame(height: 280)
+                    .clipped()
+
+                    // Dark gradient overlay so text is always readable
+                    LinearGradient(
+                        colors: [.black.opacity(0.45), .clear],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                    .frame(height: 280)
 
                     // Badges overlay
                     HStack(spacing: AppTheme.Spacing.xs) {
-                        BadgeView(text: event.isPublic ? "Public" : "Private",
+                        BadgeView(text: event.isPublic ? String(localized: "events.badge.public") : String(localized: "events.badge.private"),
                                   color: event.isPublic ? AppTheme.Colors.palmGreen : AppTheme.Colors.nightPurple)
                         if event.isFree {
-                            BadgeView(text: "Free", color: AppTheme.Colors.teal)
+                            BadgeView(text: String(localized: "events.badge.free"), color: AppTheme.Colors.teal)
                         }
                         if event.isLGBTFriendly {
                             BadgeView(text: "LGBT+", color: AppTheme.Colors.nightPurple)
@@ -135,7 +152,7 @@ struct EventDetailView: View {
                     // Price
                     if !event.isFree, let price = event.ticketPrice {
                         HStack {
-                            Text("Tickets from")
+                            Text(String(localized: "events.ticketsFrom"))
                                 .font(AppTheme.Font.label())
                                 .foregroundStyle(AppTheme.Colors.mediumGray)
                             Spacer()
@@ -149,7 +166,7 @@ struct EventDetailView: View {
                     }
 
                     // Description
-                    Text("About")
+                    Text(String(localized: "events.about"))
                         .font(AppTheme.Font.headline())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
 
@@ -163,7 +180,7 @@ struct EventDetailView: View {
 
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Organized by")
+                            Text(String(localized: "events.organizedBy"))
                                 .font(AppTheme.Font.caption())
                                 .foregroundStyle(AppTheme.Colors.mediumGray)
                             Text(event.organizer)
@@ -185,7 +202,7 @@ struct EventDetailView: View {
                     // CTA
                     if let urlStr = event.ticketURL, let url = URL(string: urlStr) {
                         Link(destination: url) {
-                            Text("Get Tickets")
+                            Text(String(localized: "events.getTickets"))
                                 .font(AppTheme.Font.headline())
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -201,6 +218,19 @@ struct EventDetailView: View {
         }
         .ignoresSafeArea(edges: .top)
         .navTitleMode(.inline)
+    }
+
+    private var heroFallback: some View {
+        ZStack {
+            LinearGradient(
+                colors: [AppTheme.Colors.coral.opacity(0.8), AppTheme.Colors.nightPurple.opacity(0.6)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 72, weight: .light))
+                .foregroundStyle(.white.opacity(0.7))
+        }
     }
 }
 

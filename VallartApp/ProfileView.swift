@@ -1,11 +1,19 @@
 import SwiftUI
 import Supabase
 import AuthenticationServices
+import PhotosUI
 
 // MARK: - ProfileView
 struct ProfileView: View {
     @StateObject private var auth = AuthService.shared
     @State private var showingLogin = false
+    @State private var savedListings: [Listing] = []
+    @State private var savedLoaded = false
+    @State private var showEditName = false
+    @State private var editNameText = ""
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var isUploadingAvatar = false
+    @State private var showSavedSheet = false
 
     var body: some View {
         NavigationStack {
@@ -19,10 +27,30 @@ struct ProfileView: View {
                     guestView
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle(String(localized: "profile.title"))
             .navTitleMode(.large)
-            .sheet(isPresented: $showingLogin) {
-                LoginView()
+            .sheet(isPresented: $showingLogin) { LoginView() }
+            .sheet(isPresented: $showSavedSheet) { savedSheet }
+            .alert(String(localized: "profile.editName"), isPresented: $showEditName) {
+                TextField(String(localized: "profile.namePlaceholder"), text: $editNameText)
+                Button(String(localized: "profile.save")) { Task { await auth.updateName(editNameText) } }
+                Button(String(localized: "profile.cancel"), role: .cancel) {}
+            }
+            .onChange(of: selectedPhoto) { _, newItem in
+                Task {
+                    guard let newItem,
+                          let data = try? await newItem.loadTransferable(type: Data.self),
+                          let image = UIImage(data: data) else { return }
+                    isUploadingAvatar = true
+                    await auth.uploadAvatar(image)
+                    isUploadingAvatar = false
+                }
+            }
+            .task(id: auth.profile?.savedListingIds.count) {
+                if auth.isLoggedIn && !savedLoaded {
+                    savedListings = await auth.fetchSavedListings()
+                    savedLoaded = true
+                }
             }
         }
     }
@@ -36,10 +64,10 @@ struct ProfileView: View {
                 .foregroundStyle(AppTheme.Colors.mediumGray)
 
             VStack(spacing: AppTheme.Spacing.sm) {
-                Text("Welcome to VallartApp")
+                Text(String(localized: "profile.welcome"))
                     .font(AppTheme.Font.headline())
                     .foregroundStyle(AppTheme.Colors.deepNavy)
-                Text("Sign in to save favorites, write reviews, and more.")
+                Text(String(localized: "profile.welcomeHint"))
                     .font(AppTheme.Font.body())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
                     .multilineTextAlignment(.center)
@@ -48,7 +76,7 @@ struct ProfileView: View {
 
             VStack(spacing: AppTheme.Spacing.sm) {
                 Button { showingLogin = true } label: {
-                    Text("Sign In / Create Account")
+                    Text(String(localized: "profile.signIn"))
                         .font(AppTheme.Font.headline())
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -67,15 +95,15 @@ struct ProfileView: View {
 
     private var businessOwnerCTA: some View {
         VStack(spacing: AppTheme.Spacing.sm) {
-            Text("Own a business in Puerto Vallarta?")
+            Text(String(localized: "profile.business.cta"))
                 .font(AppTheme.Font.label())
                 .foregroundStyle(AppTheme.Colors.deepNavy)
-            Text("List your business and reach thousands of tourists")
+            Text(String(localized: "profile.business.hint"))
                 .font(AppTheme.Font.caption())
                 .foregroundStyle(AppTheme.Colors.mediumGray)
                 .multilineTextAlignment(.center)
             Button { showingLogin = true } label: {
-                Label("Add Your Business", systemImage: "building.2.fill")
+                Label(String(localized: "profile.business.add"), systemImage: "building.2.fill")
                     .font(AppTheme.Font.label())
                     .foregroundStyle(AppTheme.Colors.deepNavy)
                     .padding(.horizontal, AppTheme.Spacing.lg)
@@ -91,19 +119,60 @@ struct ProfileView: View {
     private var loggedInView: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: AppTheme.Spacing.lg) {
-                // Avatar
+
+                // Avatar + Name
                 VStack(spacing: AppTheme.Spacing.sm) {
-                    ZStack {
-                        Circle()
-                            .fill(AppTheme.Colors.coral.opacity(0.15))
-                            .frame(width: 90, height: 90)
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(AppTheme.Colors.coral)
+                    ZStack(alignment: .bottomTrailing) {
+                        // Avatar image
+                        Group {
+                            if let avatarUrl = auth.profile?.avatarUrl, let url = URL(string: avatarUrl) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let img):
+                                        img.resizable().scaledToFill()
+                                    default:
+                                        avatarPlaceholder
+                                    }
+                                }
+                            } else {
+                                avatarPlaceholder
+                            }
+                        }
+                        .frame(width: 90, height: 90)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(AppTheme.Colors.coral.opacity(0.3), lineWidth: 2))
+
+                        // Upload overlay
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            ZStack {
+                                Circle().fill(AppTheme.Colors.coral).frame(width: 28, height: 28)
+                                if isUploadingAvatar {
+                                    ProgressView().tint(.white).scaleEffect(0.6)
+                                } else {
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                        }
+                        .offset(x: 4, y: 4)
                     }
-                    Text(auth.profile?.name ?? "Traveler")
-                        .font(AppTheme.Font.headline())
-                        .foregroundStyle(AppTheme.Colors.deepNavy)
+
+                    // Name (tap to edit)
+                    Button {
+                        editNameText = auth.profile?.name ?? ""
+                        showEditName = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(auth.profile?.name ?? "Traveler")
+                                .font(AppTheme.Font.headline())
+                                .foregroundStyle(AppTheme.Colors.deepNavy)
+                            Image(systemName: "pencil")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.Colors.mediumGray)
+                        }
+                    }
+
                     Text(auth.session?.user.email ?? "")
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.mediumGray)
@@ -112,11 +181,11 @@ struct ProfileView: View {
 
                 // Stats row
                 HStack(spacing: 0) {
-                    StatView(value: "0", label: "Reviews")
+                    StatView(value: "0", label: String(localized: "profile.stats.reviews"))
                     Divider().frame(height: 40)
-                    StatView(value: "\(auth.profile?.savedListingIds.count ?? 0)", label: "Saved")
+                    StatView(value: "\(auth.profile?.savedListingIds.count ?? 0)", label: String(localized: "profile.stats.saved"))
                     Divider().frame(height: 40)
-                    StatView(value: "0", label: "Photos")
+                    StatView(value: "0", label: String(localized: "profile.stats.photos"))
                 }
                 .background(AppTheme.Colors.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
@@ -125,20 +194,28 @@ struct ProfileView: View {
 
                 // Menu
                 VStack(spacing: 0) {
-                    ProfileMenuItem(icon: "heart.fill",       title: "Saved Places",   color: AppTheme.Colors.coral)
+                    Button { showSavedSheet = true } label: {
+                        ProfileMenuItem(icon: "heart.fill", title: String(localized: "profile.menu.saved"), color: AppTheme.Colors.coral)
+                    }
+                    .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "star.fill",        title: "My Reviews",     color: AppTheme.Colors.goldenSun)
+                    ProfileMenuItem(icon: "star.fill",        title: String(localized: "profile.menu.reviews"),       color: AppTheme.Colors.goldenSun)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "building.2.fill",  title: "My Business",    color: AppTheme.Colors.teal)
+                    ProfileMenuItem(icon: "building.2.fill",  title: String(localized: "profile.menu.business"),      color: AppTheme.Colors.teal)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "bell.fill",        title: "Notifications",  color: AppTheme.Colors.nightPurple)
+                    ProfileMenuItem(icon: "bell.fill",        title: String(localized: "profile.menu.notifications"), color: AppTheme.Colors.nightPurple)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "gearshape.fill",   title: "Settings",       color: AppTheme.Colors.mediumGray)
+                    ProfileMenuItem(icon: "gearshape.fill",   title: String(localized: "profile.menu.settings"),      color: AppTheme.Colors.mediumGray)
                 }
                 .background(AppTheme.Colors.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
                 .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
                 .padding(.horizontal, AppTheme.Spacing.md)
+
+                // Saved listings preview (top 3)
+                if !savedListings.isEmpty {
+                    savedPreviewSection
+                }
 
                 if let errMsg = auth.errorMessage {
                     Text(errMsg)
@@ -147,14 +224,101 @@ struct ProfileView: View {
                         .padding(.horizontal, AppTheme.Spacing.xl)
                 }
 
-                Button {
-                    Task { await auth.signOut() }
-                } label: {
-                    Text("Sign Out")
+                Button { Task { await auth.signOut() } } label: {
+                    Text(String(localized: "profile.signOut"))
                         .font(AppTheme.Font.label())
                         .foregroundStyle(AppTheme.Colors.coral)
                 }
                 .padding(.bottom, AppTheme.Spacing.xxl)
+            }
+        }
+    }
+
+    private var avatarPlaceholder: some View {
+        ZStack {
+            Circle().fill(AppTheme.Colors.coral.opacity(0.15))
+            Image(systemName: "person.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(AppTheme.Colors.coral)
+        }
+    }
+
+    // MARK: Saved Preview
+    private var savedPreviewSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            HStack {
+                Text("Saved Places")
+                    .font(AppTheme.Font.headline())
+                    .foregroundStyle(AppTheme.Colors.deepNavy)
+                Spacer()
+                Button { showSavedSheet = true } label: {
+                    Text("See all (\(savedListings.count))")
+                        .font(AppTheme.Font.caption())
+                        .foregroundStyle(AppTheme.Colors.coral)
+                }
+            }
+            .padding(.horizontal, AppTheme.Spacing.md)
+
+            ForEach(savedListings.prefix(3)) { listing in
+                NavigationLink(destination: ListingDetailView(listing: listing)) {
+                    ListingRowView(listing: listing)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, AppTheme.Spacing.md)
+            }
+        }
+    }
+
+    // MARK: Saved Sheet (full list)
+    private var savedSheet: some View {
+        NavigationStack {
+            ZStack {
+                AppTheme.Colors.sand.ignoresSafeArea()
+                if savedListings.isEmpty {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        Image(systemName: "heart.slash")
+                            .font(.system(size: 50))
+                            .foregroundStyle(AppTheme.Colors.mediumGray)
+                        Text(String(localized: "saved.empty"))
+                            .font(AppTheme.Font.headline())
+                            .foregroundStyle(AppTheme.Colors.deepNavy)
+                        Text(String(localized: "saved.emptyHint"))
+                            .font(AppTheme.Font.body())
+                            .foregroundStyle(AppTheme.Colors.mediumGray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, AppTheme.Spacing.xl)
+                    }
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: AppTheme.Spacing.sm) {
+                            ForEach(savedListings) { listing in
+                                NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                    ListingRowView(listing: listing)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, AppTheme.Spacing.md)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        Task {
+                                            await auth.toggleSaved(listingID: listing.id)
+                                            savedListings.removeAll { $0.id == listing.id }
+                                        }
+                                    } label: {
+                                        Label(String(localized: "saved.remove"), systemImage: "heart.slash.fill")
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, AppTheme.Spacing.md)
+                    }
+                }
+            }
+            .navigationTitle(String(localized: "saved.title"))
+            .navTitleMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "saved.done")) { showSavedSheet = false }
+                }
             }
         }
     }
