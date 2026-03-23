@@ -16,6 +16,7 @@ struct ProfileView: View {
     @State private var isUploadingAvatar = false
     @State private var showSavedSheet = false
     @State private var showPremium = false
+    @State private var showBusinessPaywall = false
 
     var body: some View {
         NavigationStack {
@@ -33,7 +34,8 @@ struct ProfileView: View {
             .navTitleMode(.large)
             .sheet(isPresented: $showingLogin) { LoginView() }
             .sheet(isPresented: $showSavedSheet) { savedSheet }
-            .sheet(isPresented: $showPremium) { PremiumView() }
+            .sheet(isPresented: $showPremium) { PremiumView(startOn: .user) }
+            .sheet(isPresented: $showBusinessPaywall) { PremiumView(startOn: .business) }
             .alert(String(localized: "profile.editName"), isPresented: $showEditName) {
                 TextField(String(localized: "profile.namePlaceholder"), text: $editNameText)
                 Button(String(localized: "profile.save")) { Task { await auth.updateName(editNameText) } }
@@ -182,21 +184,25 @@ struct ProfileView: View {
                     // Premium badge or upgrade prompt
                     if auth.profile?.isPremium == true,
                        let tier = auth.profile?.premiumTier {
-                        PremiumBadgeView(tierName: tier.replacingOccurrences(of: "_", with: " ").capitalized)
+                        let isExplorer = tier.hasPrefix("user_")
+                        PremiumBadgeView(
+                            tierName: isExplorer ? "Explorer" : tier.replacingOccurrences(of: "_", with: " ").capitalized,
+                            isExplorer: isExplorer
+                        )
                     } else {
                         Button { showPremium = true } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "crown")
+                                Image(systemName: "figure.walk.departure")
                                     .font(.system(size: 11))
-                                Text("Upgrade to Premium")
+                                Text("Upgrade to Explorer")
                                     .font(AppTheme.Font.caption(12))
                             }
-                            .foregroundStyle(AppTheme.Colors.goldenSun)
+                            .foregroundStyle(AppTheme.Colors.teal)
                             .padding(.horizontal, AppTheme.Spacing.sm)
                             .padding(.vertical, 4)
-                            .background(AppTheme.Colors.goldenSun.opacity(0.12))
+                            .background(AppTheme.Colors.teal.opacity(0.12))
                             .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(AppTheme.Colors.goldenSun.opacity(0.3), lineWidth: 1))
+                            .overlay(Capsule().strokeBorder(AppTheme.Colors.teal.opacity(0.3), lineWidth: 1))
                         }
                     }
 
@@ -231,7 +237,10 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "building.2.fill",  title: String(localized: "profile.menu.business"),      color: AppTheme.Colors.teal)
+                    Button { showBusinessPaywall = true } label: {
+                        ProfileMenuItem(icon: "building.2.fill", title: String(localized: "profile.menu.business"), color: AppTheme.Colors.teal)
+                    }
+                    .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
                     ProfileMenuItem(icon: "bell.fill",        title: String(localized: "profile.menu.notifications"), color: AppTheme.Colors.nightPurple)
                     Divider().padding(.leading, 52)

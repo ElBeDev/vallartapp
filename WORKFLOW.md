@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.6
+**Version:** 2.7
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -228,13 +228,22 @@ MainTabView
 
 ---
 
-## Business Owner Subscription Tiers (planned)
+## Business Owner Subscription Tiers
 
-| Tier     | Price  | Features                                                            |
-|----------|--------|---------------------------------------------------------------------|
-| Free     | $0/mo  | Basic listing, 3 photos, reviews visible                            |
-| Standard | $29/mo | Unlimited photos, reply to reviews, contact button, analytics       |
-| Premium  | $79/mo | Featured placement, top of search, promoted map pin, booking widget |
+| Tier             | Price       | Features                                                            |
+|------------------|-------------|---------------------------------------------------------------------|
+| Free             | $0/mo       | Basic listing, 3 photos, reviews visible                            |
+| Standard         | $29/mo      | Unlimited photos, reply to reviews, contact button, analytics, verified badge |
+| Premium          | $79/mo      | Everything Standard + featured placement, golden map pin, Editor's Picks, booking widget |
+| Standard Yearly  | $249/yr     | Same as Standard — save 30%                                        |
+| Premium Yearly   | $699/yr     | Same as Premium — save 30%                                         |
+
+## User Explorer Subscription
+
+| Tier             | Price       | Features                                                            |
+|------------------|-------------|---------------------------------------------------------------------|
+| Explorer         | $4.99/mo    | Ad-free, early event access, partner discounts, advanced filters, offline maps |
+| Explorer Yearly  | $39.99/yr   | Same — save 33%                                                     |
 
 ---
 
@@ -264,6 +273,11 @@ MainTabView
 - Supabase profiles: is_premium, premium_tier, premium_started_at columns added ✅
 - Edge Function `create-payment-intent` deployed & verified live ✅ (returns real Stripe clientSecret)
 - STRIPE_SECRET_KEY set in Supabase project secrets ✅
+- Dual paywall: UserPaywallView (Explorer $4.99) + BusinessPaywallView (Standard $29 / Premium $79) ✅
+- BusinessTier + UserTier enums replacing PremiumTier ✅
+- business_owners table updated with plan/is_active/plan_started_at columns + RLS policies ✅
+- ProfileView: Explorer teal badge, "Upgrade to Explorer" prompt, My Business → business paywall ✅
+- Edge Function updated with all 6 tier prices ✅
 
 ### Stripe — FULLY OPERATIONAL (test mode)
 - Edge Function: https://nvubaobivraevlnlpsjr.supabase.co/functions/v1/create-payment-intent

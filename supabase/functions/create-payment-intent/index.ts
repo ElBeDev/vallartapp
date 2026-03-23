@@ -1,21 +1,25 @@
 // Supabase Edge Function: create-payment-intent
 // Called by the iOS app to create a Stripe PaymentIntent server-side.
-// The Stripe secret key never leaves this function.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? ""
 
-// Premium tier prices in cents (USD)
+// All tier prices in cents (USD)
+// Business Owner tiers
+// User Explorer tiers
 const TIER_PRICES: Record<string, number> = {
-  monthly_standard: 2900,   // $29/mo
-  monthly_premium:  7900,   // $79/mo
-  yearly_standard:  24900,  // $249/yr (~30% off)
-  yearly_premium:   69900,  // $699/yr (~30% off)
+  // Business owner plans
+  biz_standard:        2900,   // $29/mo
+  biz_premium:         7900,   // $79/mo
+  biz_standard_yearly: 24900,  // $249/yr (save 30%)
+  biz_premium_yearly:  69900,  // $699/yr (save 30%)
+  // User explorer plans
+  user_explorer:        499,   // $4.99/mo
+  user_explorer_yearly: 3999,  // $39.99/yr (save 33%)
 }
 
 serve(async (req) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -37,7 +41,6 @@ serve(async (req) => {
       })
     }
 
-    // Create PaymentIntent via Stripe REST API
     const body = new URLSearchParams({
       amount: String(amount),
       currency: "usd",
@@ -66,7 +69,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        clientSecret: intent.client_secret,
+        clientSecret:    intent.client_secret,
         paymentIntentID: intent.id,
         amount,
         currency: "usd",
