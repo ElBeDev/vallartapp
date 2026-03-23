@@ -142,7 +142,7 @@ struct EventDetailView: View {
                             .font(AppTheme.Font.label())
                             .foregroundStyle(AppTheme.Colors.deepNavy)
 
-                        Label(event.neighborhood.rawValue, systemImage: "location.fill")
+                        Label(event.neighborhood.displayName, systemImage: "location.fill")
                             .font(AppTheme.Font.caption())
                             .foregroundStyle(AppTheme.Colors.mediumGray)
                     }
@@ -291,7 +291,7 @@ struct EventListRowView: View {
                     .foregroundStyle(AppTheme.Colors.deepNavy)
                     .lineLimit(2)
 
-                Text(event.neighborhood.rawValue)
+                Text(event.neighborhood.displayName)
                     .font(AppTheme.Font.caption())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
 

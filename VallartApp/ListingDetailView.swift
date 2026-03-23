@@ -219,7 +219,7 @@ struct ListingDetailView: View {
     private var infoGrid: some View {
         VStack(spacing: AppTheme.Spacing.sm) {
             InfoRow(icon: "mappin.circle.fill", text: listing.address, color: AppTheme.Colors.coral)
-            InfoRow(icon: "location.fill", text: listing.neighborhood.rawValue, color: AppTheme.Colors.teal)
+            InfoRow(icon: "location.fill", text: listing.neighborhood.displayName, color: AppTheme.Colors.teal)
             if let phone = listing.phone {
                 InfoRow(icon: "phone.fill", text: phone, color: AppTheme.Colors.palmGreen)
             }
@@ -267,7 +267,7 @@ struct ListingDetailView: View {
                     Text(listing.address)
                         .font(AppTheme.Font.label())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
-                    Text(listing.neighborhood.rawValue)
+                    Text(listing.neighborhood.displayName)
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.mediumGray)
                 }

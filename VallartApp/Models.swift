@@ -36,17 +36,35 @@ enum ListingCategory: String, CaseIterable, Codable, Identifiable {
 
 // MARK: - Neighborhood
 enum Neighborhood: String, CaseIterable, Codable {
-    case centro          = "Centro"
-    case zonaRomantica   = "Zona Romántica"
-    case marina          = "Marina"
-    case hotelZone       = "Hotel Zone"
-    case nuevoVallarta   = "Nuevo Vallarta"
-    case bucerias        = "Bucerías"
-    case laCruz          = "La Cruz"
-    case puntaMita       = "Punta Mita"
-    case sayulita        = "Sayulita"
-    case sanPancho       = "San Pancho"
-    case yelapa          = "Yelapa"
+    case centro          = "centro"
+    case zonaRomantica   = "zonaRomantica"
+    case marina          = "marina"
+    case hotelZone       = "hotelZone"
+    case nuevaVallarta   = "nuevaVallarta"
+    case bucerías        = "bucerías"
+    case laCruz          = "laCruz"
+    case puntaMita       = "puntaMita"
+    case sayulita        = "sayulita"
+    case sanPancho       = "sanPancho"
+    case yelapa          = "yelapa"
+    case mismaloya       = "mismaloya"
+
+    var displayName: String {
+        switch self {
+        case .centro:        return "Centro"
+        case .zonaRomantica: return "Zona Romántica"
+        case .marina:        return "Marina Vallarta"
+        case .hotelZone:     return "Hotel Zone"
+        case .nuevaVallarta: return "Nuevo Vallarta"
+        case .bucerías:      return "Bucerías"
+        case .laCruz:        return "La Cruz"
+        case .puntaMita:     return "Punta Mita"
+        case .sayulita:      return "Sayulita"
+        case .sanPancho:     return "San Pancho"
+        case .yelapa:        return "Yelapa"
+        case .mismaloya:     return "Mismaloya"
+        }
+    }
 }
 
 // MARK: - PriceRange

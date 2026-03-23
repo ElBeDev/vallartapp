@@ -155,7 +155,7 @@ struct FeaturedCardView: View {
                         .foregroundStyle(.white)
                     Text("·")
                         .foregroundStyle(.white.opacity(0.6))
-                    Text(listing.neighborhood.rawValue)
+                    Text(listing.neighborhood.displayName)
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -209,7 +209,7 @@ struct ListingRowView: View {
                             .foregroundStyle(AppTheme.Colors.goldenSun)
                     }
                 }
-                Text("\(listing.category.rawValue) · \(listing.neighborhood.rawValue)")
+                Text("\(listing.category.rawValue) · \(listing.neighborhood.displayName)")
                     .font(AppTheme.Font.caption())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
                 HStack(spacing: 4) {

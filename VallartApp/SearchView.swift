@@ -81,7 +81,7 @@ struct SearchView: View {
                     ActiveFilterChip(text: cat.rawValue) { vm.selectedCategory = nil }
                 }
                 if let neighborhood = vm.selectedNeighborhood {
-                    ActiveFilterChip(text: neighborhood.rawValue) { vm.selectedNeighborhood = nil }
+                    ActiveFilterChip(text: neighborhood.displayName) { vm.selectedNeighborhood = nil }
                 }
                 if vm.openNowOnly {
                     ActiveFilterChip(text: "Open Now") { vm.openNowOnly = false }
@@ -216,7 +216,7 @@ struct FilterSheetView: View {
                     Picker("Neighborhood", selection: $vm.selectedNeighborhood) {
                         Text("All").tag(Optional<Neighborhood>.none)
                         ForEach(Neighborhood.allCases, id: \.self) { hood in
-                            Text(hood.rawValue).tag(Optional(hood))
+                            Text(hood.displayName).tag(Optional(hood))
                         }
                     }
                     .pickerStyle(.menu)

@@ -136,7 +136,7 @@ struct MapPreviewCard: View {
                     .font(AppTheme.Font.label())
                     .foregroundStyle(AppTheme.Colors.deepNavy)
                     .lineLimit(1)
-                Text(listing.neighborhood.rawValue)
+                Text(listing.neighborhood.displayName)
                     .font(AppTheme.Font.caption())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
                 HStack(spacing: 4) {
