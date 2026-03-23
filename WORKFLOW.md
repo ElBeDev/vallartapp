@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.3
+**Version:** 2.4
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -259,10 +259,19 @@ MainTabView
 - EventDetailView hero — real photo from Supabase Storage ✅
 - Admin dashboard — category breakdown table with progress bars ✅
 - My Reviews — full list from Supabase, real count in stats row, swipe-to-delete ✅
+- Stripe integration — PremiumView paywall, StripeService, Edge Function ✅
+
+### Stripe Setup — One-time steps needed
+1. Run `supabase/migrations/20260322_add_premium_to_profiles.sql` in Supabase SQL Editor
+2. Deploy Edge Function: `export SUPABASE_PAT=sbp_xxx && bash scripts/deploy-edge-function.sh`
+3. Stripe test keys already set in StripeService.swift — swap for live keys before App Store
+4. Stripe publishable key: `pk_test_51TDwPC...`
 
 ### Next Sprint — Priority
-- [ ] Add individual real photos per business (currently using category-based images)
-- [ ] RevenueCat — user premium subscription
+- [ ] Deploy Edge Function (deploy-edge-function.sh) — requires Supabase Personal Access Token
+- [ ] Run DB migration for premium columns
+- [ ] Wire StripePaymentSheet native UI (after Stripe SPM resolves in Xcode)
+- [ ] Individual real photos per business (currently category-based)
 - [ ] Business owner self-serve portal (claim listing, edit, upload photos)
 - [ ] Push notifications (Supabase Edge Functions + APNs)
 - [ ] Offline cache (SwiftData)

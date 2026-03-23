@@ -17,8 +17,10 @@ swift_files = %w[
   MainTabView.swift
   MapExploreView.swift
   Models.swift
+  PremiumView.swift
   ProfileView.swift
   SearchView.swift
+  StripeService.swift
   SupabaseService.swift
   VallartAppApp.swift
 ]
@@ -47,6 +49,18 @@ supabase_pkg_ref    = fake_uuid("pkg_supabase")
 supabase_prod_dep   = fake_uuid("proddep_supabase")
 supabase_build_file = fake_uuid("buildfile_supabase_pkg")
 
+# SPM — Stripe package UUIDs
+stripe_pkg_ref    = fake_uuid("pkg_stripe")
+stripe_prod_dep   = fake_uuid("proddep_stripe")
+stripe_build_file = fake_uuid("buildfile_stripe_pkg")
+
+# Localizable.strings (en + es variant group)
+loc_en_ref         = fake_uuid("fileref_loc_en")
+loc_es_ref         = fake_uuid("fileref_loc_es")
+loc_variant_group  = fake_uuid("variantgroup_localizable")
+loc_en_build       = fake_uuid("buildfile_loc_en")
+loc_es_build       = fake_uuid("buildfile_loc_es")
+
 pbxproj = <<~PBXPROJ
 // !$*UTF8*$!
 {
@@ -60,6 +74,9 @@ pbxproj = <<~PBXPROJ
 #{swift_files.map { |f| "\t\t#{build_files[f]} /* #{f} in Sources */ = {isa = PBXBuildFile; fileRef = #{file_refs[f]} /* #{f} */; };" }.join("\n")}
         #{assets_build_file} /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = #{assets_file_ref} /* Assets.xcassets */; };
         #{supabase_build_file} /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = #{supabase_prod_dep} /* Supabase */; };
+        #{stripe_build_file} /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = #{stripe_prod_dep} /* StripePaymentSheet */; };
+        #{loc_en_build} /* en in Resources */ = {isa = PBXBuildFile; fileRef = #{loc_en_ref} /* en */; };
+        #{loc_es_build} /* es in Resources */ = {isa = PBXBuildFile; fileRef = #{loc_es_ref} /* es */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,12 +85,19 @@ pbxproj = <<~PBXPROJ
         #{assets_file_ref} /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXVariantGroup section */
+        #{loc_en_ref} /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+        #{loc_es_ref} /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+        #{loc_variant_group} /* Localizable.strings */ = {isa = PBXVariantGroup; children = (#{loc_en_ref} /* en */, #{loc_es_ref} /* es */,); name = Localizable.strings; sourceTree = "<group>"; };
+/* End PBXVariantGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
         A6A849C52F6634A30015E693 /* Frameworks */ = {
             isa = PBXFrameworksBuildPhase;
             buildActionMask = 2147483647;
             files = (
                 #{supabase_build_file} /* Supabase in Frameworks */,
+                #{stripe_build_file} /* StripePaymentSheet in Frameworks */,
             );
             runOnlyForDeploymentPostprocessing = 0;
         };
@@ -93,6 +117,7 @@ pbxproj = <<~PBXPROJ
             children = (
 #{swift_files.map { |f| "\t\t\t\t#{file_refs[f]} /* #{f} */," }.join("\n")}
                 #{assets_file_ref} /* Assets.xcassets */,
+                #{loc_variant_group} /* Localizable.strings */,
             );
             path = VallartApp;
             sourceTree = "<group>";
@@ -123,6 +148,7 @@ pbxproj = <<~PBXPROJ
             name = VallartApp;
             packageProductDependencies = (
                 #{supabase_prod_dep} /* Supabase */,
+                #{stripe_prod_dep} /* StripePaymentSheet */,
             );
             productName = VallartApp;
             productReference = A6A849C82F6634A30015E693 /* VallartApp.app */;
@@ -149,11 +175,13 @@ pbxproj = <<~PBXPROJ
             knownRegions = (
                 en,
                 Base,
+                es,
             );
             mainGroup = A6A849BF2F6634A30015E693;
             minimizedProjectReferenceProxies = 1;
             packageReferences = (
                 #{supabase_pkg_ref} /* XCRemoteSwiftPackageReference "supabase-swift" */,
+                #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */,
             );
             preferredProjectObjectVersion = 77;
             productRefGroup = A6A849C92F6634A30015E693 /* Products */;
@@ -171,6 +199,8 @@ pbxproj = <<~PBXPROJ
             buildActionMask = 2147483647;
             files = (
                 #{assets_build_file} /* Assets.xcassets in Resources */,
+                #{loc_en_build} /* en in Resources */,
+                #{loc_es_build} /* es in Resources */,
             );
             runOnlyForDeploymentPostprocessing = 0;
         };
@@ -418,6 +448,14 @@ pbxproj = <<~PBXPROJ
                 minimumVersion = 2.0.0;
             };
         };
+        #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
+            isa = XCRemoteSwiftPackageReference;
+            repositoryURL = "https://github.com/stripe/stripe-ios.git";
+            requirement = {
+                kind = upToNextMajorVersion;
+                minimumVersion = 24.0.0;
+            };
+        };
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -425,6 +463,11 @@ pbxproj = <<~PBXPROJ
             isa = XCSwiftPackageProductDependency;
             package = #{supabase_pkg_ref} /* XCRemoteSwiftPackageReference "supabase-swift" */;
             productName = Supabase;
+        };
+        #{stripe_prod_dep} /* StripePaymentSheet */ = {
+            isa = XCSwiftPackageProductDependency;
+            package = #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */;
+            productName = StripePaymentSheet;
         };
 /* End XCSwiftPackageProductDependency section */
 

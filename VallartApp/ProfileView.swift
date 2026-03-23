@@ -15,6 +15,7 @@ struct ProfileView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isUploadingAvatar = false
     @State private var showSavedSheet = false
+    @State private var showPremium = false
 
     var body: some View {
         NavigationStack {
@@ -32,6 +33,7 @@ struct ProfileView: View {
             .navTitleMode(.large)
             .sheet(isPresented: $showingLogin) { LoginView() }
             .sheet(isPresented: $showSavedSheet) { savedSheet }
+            .sheet(isPresented: $showPremium) { PremiumView() }
             .alert(String(localized: "profile.editName"), isPresented: $showEditName) {
                 TextField(String(localized: "profile.namePlaceholder"), text: $editNameText)
                 Button(String(localized: "profile.save")) { Task { await auth.updateName(editNameText) } }
@@ -174,6 +176,27 @@ struct ProfileView: View {
                             Image(systemName: "pencil")
                                 .font(.caption)
                                 .foregroundStyle(AppTheme.Colors.mediumGray)
+                        }
+                    }
+
+                    // Premium badge or upgrade prompt
+                    if auth.profile?.isPremium == true,
+                       let tier = auth.profile?.premiumTier {
+                        PremiumBadgeView(tierName: tier.replacingOccurrences(of: "_", with: " ").capitalized)
+                    } else {
+                        Button { showPremium = true } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "crown")
+                                    .font(.system(size: 11))
+                                Text("Upgrade to Premium")
+                                    .font(AppTheme.Font.caption(12))
+                            }
+                            .foregroundStyle(AppTheme.Colors.goldenSun)
+                            .padding(.horizontal, AppTheme.Spacing.sm)
+                            .padding(.vertical, 4)
+                            .background(AppTheme.Colors.goldenSun.opacity(0.12))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().strokeBorder(AppTheme.Colors.goldenSun.opacity(0.3), lineWidth: 1))
                         }
                     }
 

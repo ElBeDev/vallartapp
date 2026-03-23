@@ -242,6 +242,12 @@ class AuthService: ObservableObject {
         return (try? await SupabaseListingRepository.shared.fetchReviews(byUserID: uid)) ?? []
     }
 
+    // MARK: - Refresh Profile (called after premium upgrade)
+    func refreshProfile() async {
+        guard let uid = currentUserID else { return }
+        await loadProfile(uid: uid)
+    }
+
     // MARK: - Private helpers
     private func loadProfile(uid: UUID) async {
         do {
@@ -287,16 +293,22 @@ struct UserProfile: Codable {
     var name: String?
     var avatarUrl: String?
     var isBusinessOwner: Bool
+    var isPremium: Bool
+    var premiumTier: String?
+    var premiumStartedAt: String?
     var savedListingIds: [String]
     var joinedAt: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case avatarUrl       = "avatar_url"
-        case isBusinessOwner = "is_business_owner"
-        case savedListingIds = "saved_listing_ids"
-        case joinedAt        = "joined_at"
+        case avatarUrl          = "avatar_url"
+        case isBusinessOwner    = "is_business_owner"
+        case isPremium          = "is_premium"
+        case premiumTier        = "premium_tier"
+        case premiumStartedAt   = "premium_started_at"
+        case savedListingIds    = "saved_listing_ids"
+        case joinedAt           = "joined_at"
     }
 
     init(from decoder: Decoder) throws {
@@ -305,6 +317,9 @@ struct UserProfile: Codable {
         name             = try c.decodeIfPresent(String.self, forKey: .name)
         avatarUrl        = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
         isBusinessOwner  = (try? c.decode(Bool.self, forKey: .isBusinessOwner)) ?? false
+        isPremium        = (try? c.decode(Bool.self, forKey: .isPremium)) ?? false
+        premiumTier      = try c.decodeIfPresent(String.self, forKey: .premiumTier)
+        premiumStartedAt = try c.decodeIfPresent(String.self, forKey: .premiumStartedAt)
         savedListingIds  = (try? c.decode([String].self, forKey: .savedListingIds)) ?? []
         joinedAt         = try c.decodeIfPresent(String.self, forKey: .joinedAt)
     }
