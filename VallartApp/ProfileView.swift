@@ -9,6 +9,7 @@ struct ProfileView: View {
     @State private var showingLogin = false
     @State private var savedListings: [Listing] = []
     @State private var savedLoaded = false
+    @State private var myReviewCount: Int = 0
     @State private var showEditName = false
     @State private var editNameText = ""
     @State private var selectedPhoto: PhotosPickerItem?
@@ -48,8 +49,11 @@ struct ProfileView: View {
             }
             .task(id: auth.profile?.savedListingIds.count) {
                 if auth.isLoggedIn && !savedLoaded {
-                    savedListings = await auth.fetchSavedListings()
-                    savedLoaded = true
+                    async let saved    = auth.fetchSavedListings()
+                    async let reviews  = auth.fetchMyReviews()
+                    savedListings    = await saved
+                    myReviewCount    = await reviews.count
+                    savedLoaded      = true
                 }
             }
         }
@@ -181,7 +185,7 @@ struct ProfileView: View {
 
                 // Stats row
                 HStack(spacing: 0) {
-                    StatView(value: "0", label: String(localized: "profile.stats.reviews"))
+                    StatView(value: "\(myReviewCount)", label: String(localized: "profile.stats.reviews"))
                     Divider().frame(height: 40)
                     StatView(value: "\(auth.profile?.savedListingIds.count ?? 0)", label: String(localized: "profile.stats.saved"))
                     Divider().frame(height: 40)
@@ -199,7 +203,10 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "star.fill",        title: String(localized: "profile.menu.reviews"),       color: AppTheme.Colors.goldenSun)
+                    NavigationLink(destination: MyReviewsView()) {
+                        ProfileMenuItem(icon: "star.fill", title: String(localized: "profile.menu.reviews"), color: AppTheme.Colors.goldenSun)
+                    }
+                    .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
                     ProfileMenuItem(icon: "building.2.fill",  title: String(localized: "profile.menu.business"),      color: AppTheme.Colors.teal)
                     Divider().padding(.leading, 52)
@@ -252,7 +259,7 @@ struct ProfileView: View {
                     .foregroundStyle(AppTheme.Colors.deepNavy)
                 Spacer()
                 Button { showSavedSheet = true } label: {
-                    Text("See all (\(savedListings.count))")
+                    Text(String(format: String(localized: "saved.seeAll"), savedListings.count))
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.coral)
                 }

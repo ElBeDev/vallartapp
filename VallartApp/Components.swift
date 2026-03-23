@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 // MARK: - CategoryChipView
 struct CategoryChipView: View {
@@ -570,5 +571,161 @@ struct WriteReviewView: View {
             errorMessage = error.localizedDescription
         }
         isSubmitting = false
+    }
+}
+
+// MARK: - MyReviewsView
+struct MyReviewsView: View {
+    @StateObject private var auth = AuthService.shared
+    @State private var reviews: [Review] = []
+    @State private var isLoading = true
+    @State private var listingNames: [UUID: String] = [:]
+
+    private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
+
+    var body: some View {
+        ZStack {
+            AppTheme.Colors.sand.ignoresSafeArea()
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if reviews.isEmpty {
+                emptyState
+            } else {
+                reviewsList
+            }
+        }
+        .navigationTitle(String(localized: "profile.menu.reviews"))
+        .navTitleMode(.large)
+        .task {
+            await loadReviews()
+        }
+    }
+
+    // MARK: Empty State
+    private var emptyState: some View {
+        VStack(spacing: AppTheme.Spacing.md) {
+            Image(systemName: "star.slash")
+                .font(.system(size: 52))
+                .foregroundStyle(AppTheme.Colors.mediumGray)
+            Text("No reviews yet")
+                .font(AppTheme.Font.headline())
+                .foregroundStyle(AppTheme.Colors.deepNavy)
+            Text("Visit a place and share your experience — your reviews help other travelers.")
+                .font(AppTheme.Font.body())
+                .foregroundStyle(AppTheme.Colors.mediumGray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, AppTheme.Spacing.xl)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: Reviews List
+    private var reviewsList: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: AppTheme.Spacing.sm) {
+                ForEach(reviews) { review in
+                    MyReviewRowView(
+                        review: review,
+                        listingName: listingNames[review.listingID] ?? "Place"
+                    )
+                    .padding(.horizontal, AppTheme.Spacing.md)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            Task { await deleteReview(review) }
+                        } label: {
+                            Label("Delete", systemImage: "trash.fill")
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, AppTheme.Spacing.md)
+            .padding(.bottom, AppTheme.Spacing.xxl)
+        }
+    }
+
+    // MARK: Data
+    private func loadReviews() async {
+        isLoading = true
+        reviews = await auth.fetchMyReviews()
+        // Fetch listing names for all reviews in one batch
+        let ids = Set(reviews.map { $0.listingID.uuidString })
+        if !ids.isEmpty {
+            if let rows = try? await supabase
+                .from("listings")
+                .select("id, name")
+                .in("id", values: Array(ids))
+                .execute()
+                .value as [ListingNameRow] {
+                for row in rows {
+                    if let uid = UUID(uuidString: row.id) {
+                        listingNames[uid] = row.name
+                    }
+                }
+            }
+        }
+        isLoading = false
+    }
+
+    private func deleteReview(_ review: Review) async {
+        do {
+            try await supabase
+                .from("reviews")
+                .delete()
+                .eq("id", value: review.id.uuidString)
+                .execute()
+            reviews.removeAll { $0.id == review.id }
+        } catch {
+            print("deleteReview error:", error)
+        }
+    }
+}
+
+// Lightweight codable for listing name lookup
+private struct ListingNameRow: Codable {
+    let id: String
+    let name: String
+}
+
+// MARK: - MyReviewRowView
+struct MyReviewRowView: View {
+    let review: Review
+    let listingName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            // Listing name + date header
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(listingName)
+                        .font(AppTheme.Font.label())
+                        .foregroundStyle(AppTheme.Colors.deepNavy)
+                    Text(review.formattedDate)
+                        .font(AppTheme.Font.caption())
+                        .foregroundStyle(AppTheme.Colors.mediumGray)
+                }
+                Spacer()
+                // Star rating badge
+                HStack(spacing: 3) {
+                    ForEach(1...5, id: \.self) { star in
+                        Image(systemName: Double(star) <= review.rating ? "star.fill" : "star")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Double(star) <= review.rating
+                                ? AppTheme.Colors.goldenSun
+                                : AppTheme.Colors.mediumGray.opacity(0.4))
+                    }
+                }
+            }
+            // Review text
+            Text(review.text)
+                .font(AppTheme.Font.body())
+                .foregroundStyle(AppTheme.Colors.deepNavy.opacity(0.8))
+                .lineSpacing(4)
+                .lineLimit(4)
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.white)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }

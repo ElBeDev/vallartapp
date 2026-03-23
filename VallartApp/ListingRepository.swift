@@ -11,6 +11,7 @@ protocol ListingRepositoryProtocol {
     func fetchByID(_ id: UUID) async throws -> Listing
     func search(query: String, category: ListingCategory?, neighborhood: Neighborhood?, openOnly: Bool, lgbtOnly: Bool) async throws -> [Listing]
     func fetchReviews(for listingID: UUID) async throws -> [Review]
+    func fetchReviews(byUserID userID: UUID) async throws -> [Review]
     func submitReview(_ review: ReviewInput) async throws
 }
 
@@ -215,6 +216,17 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
             .from("reviews")
             .select()
             .eq("listing_id", value: listingID.uuidString)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        return rows.map { $0.toReview() }
+    }
+
+    func fetchReviews(byUserID userID: UUID) async throws -> [Review] {
+        let rows: [ReviewRow] = try await supabase
+            .from("reviews")
+            .select()
+            .eq("user_id", value: userID.uuidString)
             .order("created_at", ascending: false)
             .execute()
             .value

@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.2
+**Version:** 2.3
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -258,11 +258,10 @@ MainTabView
 - Dynamic time-based greeting (morning/afternoon/evening) ✅
 - EventDetailView hero — real photo from Supabase Storage ✅
 - Admin dashboard — category breakdown table with progress bars ✅
+- My Reviews — full list from Supabase, real count in stats row, swipe-to-delete ✅
 
 ### Next Sprint — Priority
 - [ ] Add individual real photos per business (currently using category-based images)
-- [ ] Wire "My Reviews" list in Profile to show actual user reviews
-- [ ] Stats counters (Reviews, Photos) in Profile use real counts from Supabase
 - [ ] RevenueCat — user premium subscription
 - [ ] Business owner self-serve portal (claim listing, edit, upload photos)
 - [ ] Push notifications (Supabase Edge Functions + APNs)

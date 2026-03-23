@@ -236,6 +236,12 @@ class AuthService: ObservableObject {
         }
     }
 
+    // MARK: - Fetch My Reviews
+    func fetchMyReviews() async -> [Review] {
+        guard let uid = currentUserID else { return [] }
+        return (try? await SupabaseListingRepository.shared.fetchReviews(byUserID: uid)) ?? []
+    }
+
     // MARK: - Private helpers
     private func loadProfile(uid: UUID) async {
         do {
