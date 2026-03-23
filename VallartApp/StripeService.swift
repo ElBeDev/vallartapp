@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Supabase
+import StripePaymentSheet
 
 // MARK: - PremiumTier
 enum PremiumTier: String, CaseIterable, Identifiable {
@@ -60,8 +61,6 @@ enum PremiumTier: String, CaseIterable, Identifiable {
 }
 
 // MARK: - StripeService
-// Wraps Stripe PaymentSheet — the actual Stripe import is resolved after SPM fetch.
-// Until then, payment is simulated (sandbox mode).
 @MainActor
 class StripeService: ObservableObject {
 
@@ -70,52 +69,79 @@ class StripeService: ObservableObject {
     static let publishableKey = "pk_test_51TDwPCLJz5VzlqoYHj0RpZNOv4vacLYFEHjV7RifYFafBavQ6sLo3FO02CunEnxvM5YqrKR1husABqnuniEt1y0S00Xo4uJ4P0"
     private let edgeFunctionURL = "https://nvubaobivraevlnlpsjr.supabase.co/functions/v1/create-payment-intent"
 
-    @Published var isLoading    = false
+    @Published var isLoading     = false
     @Published var errorMessage: String?
-    @Published var clientSecret: String?       // set when payment intent is ready
-    @Published var paymentReady = false        // triggers PaymentSheet presentation
+    @Published var paymentSheet: PaymentSheet?    // non-nil triggers .paymentSheet modifier
+    @Published var paymentResult: PaymentSheetResult?
 
-    private init() {}
+    private init() {
+        StripeAPI.defaultPublishableKey = Self.publishableKey
+    }
 
-    // MARK: - Fetch PaymentIntent from Edge Function
-    func preparePayment(tier: PremiumTier, userID: String) async {
-        isLoading    = true
-        errorMessage = nil
-        clientSecret = nil
+    // MARK: - Build PaymentSheet from Edge Function
+    func preparePaymentSheet(tier: PremiumTier, userID: String) async {
+        isLoading     = true
+        errorMessage  = nil
+        paymentSheet  = nil
+        paymentResult = nil
 
         do {
             guard let url = URL(string: edgeFunctionURL) else { throw URLError(.badURL) }
             var req = URLRequest(url: url)
-            req.httpMethod = "POST"
+            req.httpMethod  = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            req.httpBody = try JSONSerialization.data(withJSONObject: [
-                "tier": tier.rawValue,
+            req.httpBody    = try JSONSerialization.data(withJSONObject: [
+                "tier":   tier.rawValue,
                 "userID": userID
             ])
+
             let (data, response) = try await URLSession.shared.data(for: req)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                let msg = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "Server error"
+                let msg = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "Payment server error"
                 throw NSError(domain: msg, code: 0)
             }
+
             struct Resp: Decodable { let clientSecret: String }
             let r = try JSONDecoder().decode(Resp.self, from: data)
-            clientSecret = r.clientSecret
-            paymentReady = true
+
+            var config                           = PaymentSheet.Configuration()
+            config.merchantDisplayName           = "VallartApp"
+            config.allowsDelayedPaymentMethods   = false
+            config.defaultBillingDetails.address.country = "MX"
+
+            paymentSheet = PaymentSheet(
+                paymentIntentClientSecret: r.clientSecret,
+                configuration: config
+            )
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
     }
 
-    // MARK: - Mark user premium after successful payment
+    // MARK: - Handle result after PaymentSheet closes
+    func handleResult(_ result: PaymentSheetResult, tier: PremiumTier, userID: String) async -> Bool {
+        switch result {
+        case .completed:
+            await activatePremium(userID: userID, tier: tier)
+            return true
+        case .failed(let err):
+            errorMessage = err.localizedDescription
+            return false
+        case .canceled:
+            return false
+        }
+    }
+
+    // MARK: - Mark user premium in Supabase
     func activatePremium(userID: String, tier: PremiumTier) async {
         do {
             try await supabase
                 .from("profiles")
                 .update([
-                    "is_premium":          AnyJSON.bool(true),
-                    "premium_tier":        AnyJSON.string(tier.rawValue),
-                    "premium_started_at":  AnyJSON.string(ISO8601DateFormatter().string(from: Date()))
+                    "is_premium":           AnyJSON.bool(true),
+                    "premium_tier":         AnyJSON.string(tier.rawValue),
+                    "premium_started_at":   AnyJSON.string(ISO8601DateFormatter().string(from: Date()))
                 ])
                 .eq("id", value: userID)
                 .execute()
@@ -126,7 +152,7 @@ class StripeService: ObservableObject {
     }
 }
 
-// MARK: - PaymentIntentResponse
+// MARK: - PaymentIntentResponse (kept for reference)
 private struct PaymentIntentResponse: Decodable {
     let clientSecret: String
 }

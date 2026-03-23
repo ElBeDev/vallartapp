@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.4
+**Version:** 2.5
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -244,8 +244,8 @@ MainTabView
 - iOS app core — all 5 tabs functional
 - Supabase backend — schema, RLS, real data
 - Admin web portal (Next.js + Vercel)
-- 56 real business listings + 6 events — 5+ per category ✅
-- Real photos for all 56 listings + 6 events (Supabase Storage) ✅
+- 56 real business listings + 6 events, 5+ per category ✅
+- Individual real photos for all 56 listings + 6 events (Supabase Storage, each UUID-named) ✅
 - Map with verified coordinates
 - Directions (Apple Maps + Google Maps + Waze)
 - Zero mock data — 100% live Supabase
@@ -258,33 +258,30 @@ MainTabView
 - Dynamic time-based greeting (morning/afternoon/evening) ✅
 - EventDetailView hero — real photo from Supabase Storage ✅
 - Admin dashboard — category breakdown table with progress bars ✅
-- My Reviews — full list from Supabase, real count in stats row, swipe-to-delete ✅
-- Stripe integration — PremiumView paywall, StripeService, Edge Function ✅
+- My Reviews — full list from Supabase, real count in stats, swipe-to-delete ✅
+- Stripe integration: PremiumView paywall, StripeService, native PaymentSheet ✅
+- Stripe SPM resolved (stripe-ios 24.25.0) ✅
+- Supabase profiles: is_premium, premium_tier, premium_started_at columns added ✅
 
-### Stripe Setup — One-time steps needed
-1. Run `supabase/migrations/20260322_add_premium_to_profiles.sql` in Supabase SQL Editor
-2. Deploy Edge Function: `export SUPABASE_PAT=sbp_xxx && bash scripts/deploy-edge-function.sh`
-3. Stripe test keys already set in StripeService.swift — swap for live keys before App Store
-4. Stripe publishable key: `pk_test_51TDwPC...`
+### Stripe Setup — Remaining one-time steps
+1. ~~Run DB migration~~ ✅ Done
+2. Deploy Edge Function — needs your Supabase Personal Access Token:
+   ```bash
+   export SUPABASE_PAT=sbp_xxxx
+   export STRIPE_SECRET_KEY=sk_test_51TDwPCLJz5...
+   bash scripts/deploy-edge-function.sh
+   ```
+   Get token: https://supabase.com/dashboard/account/tokens
+3. Swap sk_test_ → sk_live_ and pk_test_ → pk_live_ before App Store
 
 ### Next Sprint — Priority
-- [ ] Deploy Edge Function (deploy-edge-function.sh) — requires Supabase Personal Access Token
-- [ ] Run DB migration for premium columns
-- [ ] Wire StripePaymentSheet native UI (after Stripe SPM resolves in Xcode)
-- [ ] Individual real photos per business (currently category-based)
-- [ ] Business owner self-serve portal (claim listing, edit, upload photos)
+- [ ] Deploy Stripe Edge Function (need SUPABASE_PAT)
+- [ ] Business owner self-serve portal (claim listing, edit info, upload photos)
 - [ ] Push notifications (Supabase Edge Functions + APNs)
 - [ ] Offline cache (SwiftData)
-- [ ] App Store submission prep
-
-### Future
-- [ ] RevenueCat — user premium subscription
-- [ ] Business owner self-serve portal (claim listing, edit, upload photos)
-- [ ] Push notifications (Supabase Edge Functions + APNs)
-- [ ] Offline cache (SwiftData)
-- [ ] App Store submission prep
+- [ ] App Store submission prep (icons, screenshots, metadata)
 - [ ] Deep links (Universal Links)
-- [ ] USD / MXN price toggle
+- [ ] USD / MXN price toggle in listings
 
 ---
 

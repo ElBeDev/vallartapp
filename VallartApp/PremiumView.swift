@@ -1,4 +1,5 @@
 import SwiftUI
+import StripePaymentSheet
 
 // MARK: - PremiumView
 // Paywall shown when a user taps a premium feature or "Upgrade" in Profile.
@@ -10,7 +11,6 @@ struct PremiumView: View {
     @State private var billingCycle: BillingCycle = .monthly
     @State private var selectedTier: PremiumTier  = .monthlyPremium
     @State private var paymentSuccess              = false
-    @State private var showEdgeFunctionNote        = false
 
     enum BillingCycle: String, CaseIterable {
         case monthly = "Monthly"
@@ -85,15 +85,28 @@ struct PremiumView: View {
                     }
                 }
             }
-            .alert("Upgrade Started!", isPresented: $showEdgeFunctionNote) {
-                Button("OK") {}
-            } message: {
-                Text("The payment system is almost ready.\n\nTo complete setup:\n1. Deploy the Edge Function from supabase/functions/create-payment-intent\n2. The Upgrade button will activate the full Stripe payment sheet.\n\nFor now, use Stripe test card: 4242 4242 4242 4242.")
-            }
+            // Native Stripe PaymentSheet — presented automatically when paymentSheet is non-nil
+            .paymentSheet(
+                isPresented: Binding(
+                    get: { stripe.paymentSheet != nil },
+                    set: { if !$0 { stripe.paymentSheet = nil } }
+                ),
+                paymentSheet: stripe.paymentSheet ?? PaymentSheet(
+                    paymentIntentClientSecret: "placeholder",
+                    configuration: .init()
+                ),
+                onCompletion: { result in
+                    Task {
+                        guard let uid = auth.currentUserID?.uuidString else { return }
+                        let ok = await stripe.handleResult(result, tier: selectedTier, userID: uid)
+                        if ok { paymentSuccess = true }
+                    }
+                }
+            )
             .alert("Payment Successful!", isPresented: $paymentSuccess) {
                 Button("Done") { dismiss() }
             } message: {
-                Text("Welcome to VallartApp \(selectedTier.displayName)!")
+                Text("Welcome to VallartApp \(selectedTier.displayName)! Your account has been upgraded.")
             }
         }
     }
@@ -192,7 +205,6 @@ struct PremiumView: View {
     // MARK: CTA
     @ViewBuilder
     private var ctaSection: some View {
-        // Sign-in gate
         if !auth.isLoggedIn {
             Text("Please sign in to upgrade")
                 .font(AppTheme.Font.caption())
@@ -202,19 +214,8 @@ struct PremiumView: View {
                 Button {
                     Task {
                         guard let uid = auth.currentUserID?.uuidString else { return }
-                        await stripe.preparePayment(tier: selectedTier, userID: uid)
-                        // If Edge Function not deployed yet — show info
-                        if stripe.errorMessage != nil {
-                            showEdgeFunctionNote = true
-                            stripe.errorMessage = nil
-                        }
-                        // If clientSecret ready — in a future sprint we present PaymentSheet here
-                        // For now simulate sandbox activation
-                        if stripe.paymentReady {
-                            await stripe.activatePremium(userID: uid, tier: selectedTier)
-                            paymentSuccess = true
-                            stripe.paymentReady = false
-                        }
+                        await stripe.preparePaymentSheet(tier: selectedTier, userID: uid)
+                        // paymentSheet being set triggers the .paymentSheet modifier above
                     }
                 } label: {
                     Group {
