@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.7
+**Version:** 2.8
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -284,8 +284,18 @@ MainTabView
 - Test card: 4242 4242 4242 4242 / any future date / any CVC
 - Swap pk_test_ → pk_live_ and sk_test_ → sk_live_ before App Store
 
+- Business Owner self-serve portal — fully functional ✅
+  - `/business/login` — dark themed login page (magic link)
+  - `/business/dashboard` — listing stats, photo preview, recent reviews, upgrade banner
+  - `/business/my-listing` — edit description, phone, website, Instagram, hours, address
+  - `/business/photos` — drag-to-reorder, upload new photos (3/20/50 limit by plan), delete
+  - `/business/reviews` — star distribution chart, full review list, reply (Standard+)
+  - `/business/analytics` — listing health checklist, plan-gated detailed analytics
+  - Middleware: `/business/*` routes separated from admin, checks `business_owners` table
+  - Plan limits enforced: Free=3 photos, Standard=20, Premium=50
+
 ### Next Sprint — Priority
-- [ ] Business owner self-serve portal (claim listing, edit info, upload photos)
+- [ ] Link business_owners.listing_id in DB for existing owners (admin tool or SQL)
 - [ ] Push notifications (Supabase Edge Functions + APNs)
 - [ ] Offline cache (SwiftData)
 - [ ] App Store submission prep (icons, screenshots, metadata)
