@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.5
+**Version:** 2.6
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -262,20 +262,15 @@ MainTabView
 - Stripe integration: PremiumView paywall, StripeService, native PaymentSheet ✅
 - Stripe SPM resolved (stripe-ios 24.25.0) ✅
 - Supabase profiles: is_premium, premium_tier, premium_started_at columns added ✅
+- Edge Function `create-payment-intent` deployed & verified live ✅ (returns real Stripe clientSecret)
+- STRIPE_SECRET_KEY set in Supabase project secrets ✅
 
-### Stripe Setup — Remaining one-time steps
-1. ~~Run DB migration~~ ✅ Done
-2. Deploy Edge Function — needs your Supabase Personal Access Token:
-   ```bash
-   export SUPABASE_PAT=sbp_xxxx
-   export STRIPE_SECRET_KEY=sk_test_51TDwPCLJz5...
-   bash scripts/deploy-edge-function.sh
-   ```
-   Get token: https://supabase.com/dashboard/account/tokens
-3. Swap sk_test_ → sk_live_ and pk_test_ → pk_live_ before App Store
+### Stripe — FULLY OPERATIONAL (test mode)
+- Edge Function: https://nvubaobivraevlnlpsjr.supabase.co/functions/v1/create-payment-intent
+- Test card: 4242 4242 4242 4242 / any future date / any CVC
+- Swap pk_test_ → pk_live_ and sk_test_ → sk_live_ before App Store
 
 ### Next Sprint — Priority
-- [ ] Deploy Stripe Edge Function (need SUPABASE_PAT)
 - [ ] Business owner self-serve portal (claim listing, edit info, upload photos)
 - [ ] Push notifications (Supabase Edge Functions + APNs)
 - [ ] Offline cache (SwiftData)
