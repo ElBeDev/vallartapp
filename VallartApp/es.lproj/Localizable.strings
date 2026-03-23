@@ -3,11 +3,12 @@
    ────────────────────────────────────────── */
 
 /* Tab Bar */
-"tab.explore"    = "Explorar";
-"tab.search"     = "Buscar";
-"tab.events"     = "Eventos";
-"tab.map"        = "Mapa";
-"tab.profile"    = "Perfil";
+"tab.explore"        = "Explorar";
+"tab.search"         = "Buscar";
+"tab.events"         = "Eventos";
+"tab.map"            = "Mapa";
+"tab.notifications"  = "Alertas";
+"tab.profile"        = "Perfil";
 
 /* Explore Screen */
 "explore.greeting.morning"   = "Buenos días";

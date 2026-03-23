@@ -1,6 +1,6 @@
 # VallartApp — Development Workflow
 
-**Version:** 2.8
+**Version:** 2.9
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -294,13 +294,28 @@ MainTabView
   - Middleware: `/business/*` routes separated from admin, checks `business_owners` table
   - Plan limits enforced: Free=3 photos, Standard=20, Premium=50
 
+- Push Notifications — fully wired ✅
+  - PushNotificationService.swift — permission request, APNs token save to Supabase, inbox load, mark read
+  - AppDelegate in VallartAppApp.swift — didRegisterForRemoteNotifications → saves token
+  - NotificationsView — Tab 3 (bell icon), unread badge count, permission banner, mark all read, pull to refresh
+  - DB: device_tokens table + notifications table (RLS, indexes) applied to Supabase ✅
+  - Edge Function `send-push-notification` deployed ✅ — APNs JWT auth, broadcast + targeted, saves to inbox
+  - Admin portal Notifications page — compose UI, type selector, preview, sandbox toggle, send history
+
+### APNs — Secrets Needed to Send Real Pushes
+Add in Supabase Dashboard → Edge Functions → Secrets:
+- `APNS_KEY_ID` — 10-char key ID from Apple Developer portal
+- `APNS_TEAM_ID` — 10-char Team ID
+- `APNS_PRIVATE_KEY` — contents of the .p8 auth key file
+- `APNS_BUNDLE_ID` — your app bundle ID (e.g. com.yourname.VallartApp)
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key (already available as built-in)
+
 ### Next Sprint — Priority
-- [ ] Link business_owners.listing_id in DB for existing owners (admin tool or SQL)
-- [ ] Push notifications (Supabase Edge Functions + APNs)
+- [ ] APNs keys setup (Apple Developer portal → Keys → APNs)
+- [ ] Link business_owners.listing_id in DB for existing owners (admin tool)
 - [ ] Offline cache (SwiftData)
 - [ ] App Store submission prep (icons, screenshots, metadata)
 - [ ] Deep links (Universal Links)
-- [ ] USD / MXN price toggle in listings
 
 ---
 

@@ -30,6 +30,8 @@
         2B10E379966F9E719D013692EBD19F3A /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = CE6741F53D8BFEC7159B0C89CB92B4C2 /* StripePaymentSheet */; };
         6B17AB861701331E0F3D90C04579314B /* en in Resources */ = {isa = PBXBuildFile; fileRef = 01D803422C6E3D550D1BA50B93172142 /* en */; };
         445B655FC353881248AAD70AECB31268 /* es in Resources */ = {isa = PBXBuildFile; fileRef = A7BB414B01F03B9B53C92293A0EEACE0 /* es */; };
+		D2CF3281807081F775C5129A /* PushNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EC480FCAC31E8761F826E3B /* PushNotificationService.swift */; };
+		D08FB4D208F1D0B54FA9BAC2 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E2FD0D465F15358990E6A0 /* NotificationsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +55,8 @@
 		EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		4F785E5DC365B88C957047835AE7B07E /* VallartAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VallartAppApp.swift; sourceTree = "<group>"; };
         CC3340C45202B29152467289110AC2BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8EC480FCAC31E8761F826E3B /* PushNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationService.swift; sourceTree = "<group>"; };
+		B2E2FD0D465F15358990E6A0 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXVariantGroup section */
@@ -99,6 +103,8 @@
 				83D530576D5CF8B70831C69D8771FA49 /* Models.swift */,
 				F18C7A410882C729AA0E611C204F1EC4 /* PremiumView.swift */,
 				D14C673FF59C4C1B6F7C244BDD3B4E38 /* ProfileView.swift */,
+				B2E2FD0D465F15358990E6A0 /* NotificationsView.swift */,
+				8EC480FCAC31E8761F826E3B /* PushNotificationService.swift */,
 				6BD1CCEBA5BC1F55640786326FFD3237 /* SearchView.swift */,
 				2A39C91DC99DE88D954B90F42E8438B1 /* StripeService.swift */,
 				EF383AD825BD5EAD76CA0C59683FCF03 /* SupabaseService.swift */,
@@ -212,6 +218,8 @@
 				729A150EAE4793319564AD3F2C3ABE38 /* Models.swift in Sources */,
 				6EB4591662564AA446E370CE25A4407F /* PremiumView.swift in Sources */,
 				C765A3E9CC01BD877C50BBECD907EA95 /* ProfileView.swift in Sources */,
+				D08FB4D208F1D0B54FA9BAC2 /* NotificationsView.swift in Sources */,
+				D2CF3281807081F775C5129A /* PushNotificationService.swift in Sources */,
 				F4F905BB38F666A73F65B59F787A7908 /* SearchView.swift in Sources */,
 				946E00166F33CB933B8D580C438CAF51 /* StripeService.swift in Sources */,
 				00E0451919E78541ED656E5A922378DA /* SupabaseService.swift in Sources */,
