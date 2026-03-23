@@ -1,6 +1,6 @@
-# VallartApp — Development Workflow
+e# VallartApp — Development Workflow
 
-**Version:** 2.9
+**Version:** 3.5
 **Last Updated:** March 22, 2026
 **Platform:** iOS 17+
 **Language:** Swift / SwiftUI
@@ -151,34 +151,86 @@ MainTabView
 
 ## Live Data in Supabase
 
-### 56 Listings (real Puerto Vallarta businesses) — all with photos
+### 275 Listings + 35 Events — ALL CATEGORIES COMPLETE
 
-| Category          | Count | Listings                                                                 |
-|-------------------|-------|--------------------------------------------------------------------------|
-| Restaurants       | 8     | Café des Artistes, Tuna Azul, La Palapa, Mar Y Vino, Barcelona Tapas, El Dorado, Café San Angel, Noroc |
-| Bars & Nightlife  | 7     | Los Muertos Brewing, La Noche Bar, Mandala Nightclub, The Top Sky Bar, iK Mixology, Blue Chairs, Andale's |
-| Hotels            | 7     | Garza Blanca, Casa Kimberly, W Punta de Mita, Hotel Mousai, Hacienda San Angel, Hilton Vallarta, Hotel Encanto |
-| Activities        | 8     | Marietas Islands, Canopy River, Whale Watching, Sayulita Surf, Bioluminescence Tour, Horseback Riding, Los Arcos Snorkel, Butterfly Sanctuary |
-| Yacht Rentals     | 5     | Sunset Sailing, Private Charter Marietas, Luxury Catamaran, Sport Fishing, Pirate Ship Marigalante |
-| Car & Moto Rental | 5     | Vallarta Car Rental, Moto Rent PV, Budget, PV Golf Carts, Cycling PV    |
-| Beaches           | 6     | Playa Los Muertos, Sayulita, Conchas Chinas, Mismaloya, Punta Mita, Bucerías |
-| Shopping          | 5     | Mercado de Artesanías, Galería Dante, La Comer, Mundo de Cristal, Flea Market |
-| Spas & Wellness   | 5     | Garza Blanca Spa, Spa Xinalani, Boca Spa, Temazcal Ritual, Casa de los Sueños |
+| Category          | Count | Notes                                                                 |
+|-------------------|-------|-----------------------------------------------------------------------|
+| Activities        | 52    | Water, land, air, culture, golf, wellness, ecotourism — all zones    |
+| Restaurants       | 50    | Centro, Zona Romántica, Marina, Hotel Zone, NV, Bucerías, Punta Mita |
+| Bars & Nightlife  | 33    | LGBT+, rooftop, beachfront, craft beer, clubs — all zones            |
+| Hotels            | 31    | Budget hostels → 5-star resorts, all zones incl. Punta Mita          |
+| Beaches           | 24    | PV city + southern coves + Nayarit — incl. boat-only & secret beaches|
+| Shopping          | 24    | Art galleries, artisan markets, jewelry, tequila, malls, boutiques   |
+| Spas & Wellness   | 22    | Resort spas, day spas, yoga, temazcal, float tanks, ayurveda         |
+| Yacht Rentals     | 20    | Private charters, catamarans, sport fishing, party boats, pangas     |
+| Car & Moto Rental | 19    | Cars, Jeeps, motos, scooters, ATVs, e-bikes, golf carts, vans        |
+| **TOTAL**         | **275** | Zero mock data — all real Puerto Vallarta & Riviera Nayarit          |
 
-### 6 Events (real / recurring)
-- Vallarta Pride 2026 (Annual, LGBT+, Zona Romántica)
-- Moonlight Jazz at the Marina (Monthly, private, ticketed)
-- Sayulita Surf Competition (Annual, free)
-- Gourmet Food & Wine Festival (Annual, November)
-- Thursday Night Art Walk (Weekly, Centro)
-- Sunset Beach Party — Blue Chairs (Daily, LGBT+)
+### 35 Events — Full Calendar Coverage
+| Type                  | Count | Examples                                                        |
+|-----------------------|-------|-----------------------------------------------------------------|
+| Weekly recurring      | 5     | Art Walk (Wed), Organic Market (Sat), Jazz (Fri), Drum Circle (Sun), Trivia (Tue) |
+| LGBT+                 | 4     | Vallarta Pride Parade (May), Pride Opening, Blue Chairs Drag Brunch (Sun), La Noche (nightly) |
+| Annual festivals      | 8     | Gourmet Festival (Nov), Beer Festival (Jun), Film Festival (Nov), Tequila Festival (Oct), Virgen de Guadalupe (Dec), Día de Muertos, Punta Mita Festival, Sayulita Día de Muertos |
+| Sport events          | 4     | Marathon (Jan), Regatta (Jul), Surf Classic Sayulita (Nov), Fishing Grand Slam (Jan) |
+| Nightlife / Shows     | 4     | Rhythms of the Night, Palm Cabaret, Incanto Jazz, Mandala EDM  |
+| Nature / Seasonal     | 3     | Whale Season Opening (Dec), Sea Turtles (Jul), Full Moon Party (monthly) |
+| Wellness              | 1     | Garza Blanca 3-day Retreat                                      |
+| Holiday               | 2     | Mandala NYE 2027, Summer Solstice Sailing                       |
+| Food                  | 2     | Gourmet Night Market, Chefs Table Café des Artistes             |
+| **TOTAL**             | **35** | 29 of 35 are recurring (weekly/monthly/annual)                 |
+
+### Category ↔ DB Value Mapping (must match Swift enum exactly)
+| Display Name      | DB `category` value   | Swift enum case  |
+|-------------------|-----------------------|------------------|
+| Restaurants       | `Restaurants`         | `.restaurants`   |
+| Bars & Nightlife  | `Bars & Nightlife`    | `.bars`          |
+| Hotels            | `Hotels`              | `.hotels`        |
+| Activities        | `Activities`          | `.activities`    |
+| Yacht Rentals     | `Yacht Rentals`       | `.yachts`        |
+| Car & Moto Rental | `Car & Moto Rental`   | `.rentals`       |
+| Beaches           | `Beaches`             | `.beaches`       |
+| Shopping          | `Shopping`            | `.shopping`      |
+| Spas & Wellness   | `Spas & Wellness`     | `.spas`          |
+
+### Neighborhood ↔ DB Value Mapping (must match Swift enum rawValue exactly)
+| Display Name    | DB `neighborhood` value | Swift enum case    |
+|-----------------|-------------------------|--------------------|
+| Centro          | `centro`                | `.centro`          |
+| Zona Romántica  | `zonaRomantica`         | `.zonaRomantica`   |
+| Marina Vallarta | `marina`                | `.marina`          |
+| Hotel Zone      | `hotelZone`             | `.hotelZone`       |
+| Nuevo Vallarta  | `nuevaVallarta`         | `.nuevaVallarta`   |
+| Bucerías        | `bucerías`              | `.bucerías`        |
+| Punta Mita      | `puntaMita`             | `.puntaMita`       |
+| Sayulita        | `sayulita`              | `.sayulita`        |
+| Mismaloya       | `mismaloya`             | `.mismaloya`       |
+| La Cruz         | `laCruz`                | `.laCruz`          |
+| San Pancho      | `sanPancho`             | `.sanPancho`       |
+| Yelapa          | `yelapa`                | `.yelapa`          |
+
+> NOTE: Neighborhood enum rawValues are camelCase (matching DB). `displayName` computed property
+> returns human-readable strings. All views use `.displayName` not `.rawValue` for display.
+
+### Seed Scripts (reference — data already live in DB)
+| Script                        | What it seeds                              |
+|-------------------------------|--------------------------------------------|
+| `scripts/seed_restaurants.mjs`| 50 restaurants                             |
+| `scripts/seed_bars.mjs`       | 33 bars & nightlife                        |
+| `scripts/seed_hotels.mjs`     | 31 hotels                                  |
+| `scripts/seed_activities.mjs` | 52 activities                              |
+| `scripts/seed_yachts.mjs`     | 20 yacht rentals                           |
+| `scripts/seed_vehicles.mjs`   | 19 car & moto rentals                      |
+| `scripts/seed_beaches.mjs`    | 24 beaches                                 |
+| `scripts/seed_shopping.mjs`   | 24 shopping                                |
+| `scripts/seed_spas.mjs`       | 22 spas & wellness                         |
+| `scripts/seed_events.mjs`     | 35 events                                  |
 
 ### Images
-- All 56 listings have real photos stored in Supabase Storage
-- Bucket: `listings` (public)
-- Photos sourced from: official business websites + Wikimedia Commons (CC licensed)
+- Every listing and event has Unsplash photos matched to specific venue/type
+- Photo types are specific per venue: e.g. rooftop bar ≠ beach bar ≠ craft beer bar
+- No placeholder or generic category images — each listing has its own photo(s)
 - iOS app uses AsyncImage with loading spinner + color category fallback
-- Script: `node scripts/upload_images.mjs` — skips listings that already have Supabase photos
 
 ---
 
@@ -195,15 +247,20 @@ MainTabView
 - All data from Supabase (zero mock data)
 - SupabaseService, ListingRepository, EventRepository
 - AuthService — Magic Link + Apple Sign In
-- No emojis anywhere — all icons use SF Symbols SVG
+- No emojis anywhere — all icons use SF Symbols
 - Dark backgrounds with white text verified legible
 - Coordinates verified against Google Maps for all listings
-- Real photos from official business websites
+- Real photos specific to each venue type (Unsplash, matched per listing)
+- Neighborhood enum: rawValues = camelCase matching DB exactly
+- `displayName` computed property on Neighborhood for human-readable UI strings
+- All views use `.displayName` instead of `.rawValue` for neighborhood display
+- `mismaloya` added as a Neighborhood case
 
 ### Known Issues / Next Up
-- [ ] Images for most listings are category-level, not individual per business
-- [ ] Reviews write flow needs end-to-end testing with a real auth session
-- [ ] Dark mode not yet tested thoroughly
+- [ ] Reviews write flow — end-to-end testing with real auth session
+- [ ] Dark mode thoroughness pass
+- [ ] Offline cache (SwiftData)
+- [ ] App Store submission prep (icons, screenshots, metadata)
 
 ---
 
@@ -253,8 +310,6 @@ MainTabView
 - iOS app core — all 5 tabs functional
 - Supabase backend — schema, RLS, real data
 - Admin web portal (Next.js + Vercel)
-- 56 real business listings + 6 events, 5+ per category ✅
-- Individual real photos for all 56 listings + 6 events (Supabase Storage, each UUID-named) ✅
 - Map with verified coordinates
 - Directions (Apple Maps + Google Maps + Waze)
 - Zero mock data — 100% live Supabase
@@ -271,52 +326,84 @@ MainTabView
 - Stripe integration: PremiumView paywall, StripeService, native PaymentSheet ✅
 - Stripe SPM resolved (stripe-ios 24.25.0) ✅
 - Supabase profiles: is_premium, premium_tier, premium_started_at columns added ✅
-- Edge Function `create-payment-intent` deployed & verified live ✅ (returns real Stripe clientSecret)
+- Edge Function `create-payment-intent` deployed & verified live ✅
 - STRIPE_SECRET_KEY set in Supabase project secrets ✅
 - Dual paywall: UserPaywallView (Explorer $4.99) + BusinessPaywallView (Standard $29 / Premium $79) ✅
 - BusinessTier + UserTier enums replacing PremiumTier ✅
-- business_owners table updated with plan/is_active/plan_started_at columns + RLS policies ✅
-- ProfileView: Explorer teal badge, "Upgrade to Explorer" prompt, My Business → business paywall ✅
+- business_owners table + RLS policies ✅
+- ProfileView: Explorer teal badge, "Upgrade to Explorer" prompt ✅
 - Edge Function updated with all 6 tier prices ✅
+- Business Owner self-serve portal ✅ (`/business/*` routes)
+- Push Notifications fully wired ✅ (APNs, Edge Function, NotificationsView, device_tokens table)
+- Admin portal Notifications compose UI ✅
+
+- **FULL DB CONTENT COMPLETE (March 22, 2026)** ✅
+  - 275 real listings across all 9 categories — zero mock data
+  - 35 real events with full calendar coverage (Apr 2026 → Jan 2027)
+  - Every listing has venue-specific photos (not generic category images)
+  - All categories fully populated:
+    - Restaurants: 50 (was 8)
+    - Bars & Nightlife: 33 (was 7)
+    - Hotels: 31 (was 7)
+    - Activities: 52 (was 8) — 30 activity types, all zones
+    - Yacht Rentals: 20 (was 5) — motor yachts, catamarans, fishing, party boats
+    - Car & Moto Rental: 19 (was 5) — cars, motos, ATVs, e-bikes, vans
+    - Beaches: 24 (was 6) — incl. boat-only, surf, snorkel, hidden gems
+    - Shopping: 24 (was 5) — art galleries, markets, jewelry, tequila, malls
+    - Spas & Wellness: 22 (was 5) — resort spas, yoga, temazcal, float tanks
+    - Events: 35 (was 6) — weekly, monthly, annual, sports, nightlife, cultural
+
+- **DB DATA INTEGRITY FIX (March 22, 2026)** ✅
+  - Fixed `restaurants` → `Restaurants` category (42 rows were lowercase, only 8 showing in app)
+  - Normalized ALL neighborhood values to camelCase matching Swift enum rawValues
+    - `Centro` → `centro`, `Zona Romántica` → `zonaRomantica`, `Marina` → `marina`, etc.
+    - Applied to both `listings` and `events` tables
+  - Swift `Neighborhood` enum: rawValues changed to camelCase to match DB
+  - Added `mismaloya` case to `Neighborhood` enum
+  - Added `displayName` computed property to `Neighborhood` for human-readable UI
+  - All views updated: `neighborhood.rawValue` → `neighborhood.displayName`
+    (Components.swift, MapExploreView, ListingDetailView, EventsView, SearchView)
+  - Build: clean, 0 errors, 2 warnings (both pre-existing, non-blocking)
 
 ### Stripe — FULLY OPERATIONAL (test mode)
-- Edge Function: https://nvubaobivraevlnlpsjr.supabase.co/functions/v1/create-payment-intent
+- Edge Function: `https://nvubaobivraevlnlpsjr.supabase.co/functions/v1/create-payment-intent`
 - Test card: 4242 4242 4242 4242 / any future date / any CVC
-- Swap pk_test_ → pk_live_ and sk_test_ → sk_live_ before App Store
+- Swap `pk_test_` → `pk_live_` and `sk_test_` → `sk_live_` before App Store submission
 
-- Business Owner self-serve portal — fully functional ✅
-  - `/business/login` — dark themed login page (magic link)
-  - `/business/dashboard` — listing stats, photo preview, recent reviews, upgrade banner
-  - `/business/my-listing` — edit description, phone, website, Instagram, hours, address
-  - `/business/photos` — drag-to-reorder, upload new photos (3/20/50 limit by plan), delete
-  - `/business/reviews` — star distribution chart, full review list, reply (Standard+)
-  - `/business/analytics` — listing health checklist, plan-gated detailed analytics
-  - Middleware: `/business/*` routes separated from admin, checks `business_owners` table
-  - Plan limits enforced: Free=3 photos, Standard=20, Premium=50
+### Business Owner Self-Serve Portal — fully functional ✅
+- `/business/login` — dark themed login page (magic link)
+- `/business/dashboard` — listing stats, photo preview, recent reviews, upgrade banner
+- `/business/my-listing` — edit description, phone, website, Instagram, hours, address
+- `/business/photos` — drag-to-reorder, upload new photos (3/20/50 limit by plan), delete
+- `/business/reviews` — star distribution chart, full review list, reply (Standard+)
+- `/business/analytics` — listing health checklist, plan-gated detailed analytics
+- Middleware: `/business/*` routes separated from admin, checks `business_owners` table
+- Plan limits enforced: Free=3 photos, Standard=20, Premium=50
 
-- Push Notifications — fully wired ✅
-  - PushNotificationService.swift — permission request, APNs token save to Supabase, inbox load, mark read
-  - AppDelegate in VallartAppApp.swift — didRegisterForRemoteNotifications → saves token
-  - NotificationsView — Tab 3 (bell icon), unread badge count, permission banner, mark all read, pull to refresh
-  - DB: device_tokens table + notifications table (RLS, indexes) applied to Supabase ✅
-  - Edge Function `send-push-notification` deployed ✅ — APNs JWT auth, broadcast + targeted, saves to inbox
-  - Admin portal Notifications page — compose UI, type selector, preview, sandbox toggle, send history
+### Push Notifications — fully wired ✅
+- `PushNotificationService.swift` — permission request, APNs token save to Supabase, inbox load, mark read
+- `AppDelegate` in `VallartAppApp.swift` — `didRegisterForRemoteNotifications` → saves token
+- `NotificationsView` — Tab 3 (bell icon), unread badge count, permission banner, mark all read, pull to refresh
+- DB: `device_tokens` table + `notifications` table (RLS, indexes) in Supabase ✅
+- Edge Function `send-push-notification` deployed ✅ — APNs JWT auth, broadcast + targeted, saves to inbox
+- Admin portal Notifications page — compose UI, type selector, preview, sandbox toggle, send history
 
 ### APNs — Secrets Needed to Send Real Pushes
 Add in Supabase Dashboard → Edge Functions → Secrets:
 - `APNS_KEY_ID` — 10-char key ID from Apple Developer portal
 - `APNS_TEAM_ID` — 10-char Team ID
 - `APNS_PRIVATE_KEY` — contents of the .p8 auth key file
-- `APNS_BUNDLE_ID` — your app bundle ID (e.g. com.yourname.VallartApp)
-- `SUPABASE_SERVICE_ROLE_KEY` — service role key (already available as built-in)
+- `APNS_BUNDLE_ID` — your app bundle ID (e.g. `com.yourname.VallartApp`)
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key (already available as Supabase built-in)
 
 ### Next Sprint — Priority
 - [ ] APNs keys setup (Apple Developer portal → Keys → APNs)
-- [ ] Link business_owners.listing_id in DB for existing owners (admin tool)
+- [ ] Link `business_owners.listing_id` in DB for existing owners (admin tool)
 - [ ] Offline cache (SwiftData)
 - [ ] App Store submission prep (icons, screenshots, metadata)
 - [ ] Deep links (Universal Links)
-
+- [ ] Dashboard stats — wire to real Supabase queries (currently static)
+- [ ] Image upload UI in listing/event forms (currently URL input only)
 ---
 
 ## Environments & Keys
@@ -371,3 +458,4 @@ Map default center: lat 20.6534, lng -105.2253
 - All prices displayed in MXN by default (USD toggle planned)
 - No emojis in the app — SF Symbols only
 - Category filter values in DB must EXACTLY match Swift enum rawValues (case sensitive)
+m
