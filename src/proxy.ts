@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // ── Public routes ──────────────────────────────────────────
-  const publicPaths = ['/login', '/business/login', '/auth/callback', '/unauthorized']
+  const publicPaths = ['/login', '/business/login', '/auth/callback', '/unauthorized', '/privacy', '/terms', '/support']
   const isPublic = publicPaths.some(p => pathname.startsWith(p))
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (!user) return supabaseResponse
+  if (!user || isPublic) return supabaseResponse
 
   // ── Business Owner routes /business/* ─────────────────────
   if (pathname.startsWith('/business') && !pathname.startsWith('/business/login')) {
@@ -55,14 +55,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Admin routes (everything else) ────────────────────────
-  const raw = (process.env.ADMIN_EMAILS ?? '').trim()
-  if (raw !== '') {
-    const adminEmails = raw.split(',').map(e => e.trim()).filter(Boolean)
-    if (adminEmails.length > 0 && !adminEmails.includes(user.email ?? '')) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/unauthorized'
-      return NextResponse.redirect(url)
-    }
+  // Fail closed: app users share this Supabase project, so an empty
+  // ADMIN_EMAILS must not mean "every signed-in user is an admin".
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+    .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+  if (!adminEmails.includes((user.email ?? '').toLowerCase())) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/unauthorized'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
