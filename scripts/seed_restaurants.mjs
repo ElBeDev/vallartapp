@@ -6,8 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   'https://nvubaobivraevlnlpsjr.supabase.co',
-  // service role key — never expose publicly
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52dWJhb2JpdnJhZXZsbmxwc2pyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzNDU3MCwiZXhwIjoyMDg5MTEwNTcwfQ.placeholder'
+  // service role key — pass via env, never commit it
+  process.env.SUPABASE_SERVICE_KEY
 )
 
 // We'll use the Management API directly for the insert

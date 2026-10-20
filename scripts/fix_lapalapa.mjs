@@ -3,7 +3,7 @@ import fs from 'fs'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  'process.env.SUPABASE_SERVICE_KEY'
+  process.env.SUPABASE_SERVICE_KEY
 )
 
 const buf = fs.readFileSync('/tmp/la-palapa.jpg')
