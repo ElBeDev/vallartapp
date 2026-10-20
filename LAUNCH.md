@@ -1,13 +1,19 @@
 # VallartApp — Checklist de lanzamiento (v1.0 gratis)
 
 ## 1. Backend (Supabase)
-- [ ] Restaurar el proyecto `nvubaobivraevlnlpsjr` (dashboard → Restore). Hoy da NXDOMAIN.
-- [ ] Rotar la service_role key (estuvo pública en GitHub, commit 73a63e3) y desactivar las JWT legacy.
-- [ ] Correr `supabase/migrations/20261020_delete_my_account.sql` (SQL Editor). Sin esto falla "Eliminar cuenta".
-- [ ] Auth → URL Configuration: Site URL = dominio del panel; Redirect URLs: `vallartapp://auth/callback` y `https://<dominio>/auth/callback`.
-- [ ] Auth → Providers: Apple (client ID = `com.bener.VallartApp`) y Google configurados.
-- [ ] Push: llave APNs `.p8` → secrets `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY`, `APNS_BUNDLE_ID` para `send-push-notification`.
-- [ ] (Opcional) borrar la función `create-payment-intent` ya desplegada.
+- [x] Proyecto activo (ACTIVE_HEALTHY).
+- [x] RLS activo en todas las tablas + políticas de Storage (`20261020_rls_hardening.sql`, aplicado).
+- [x] Función `delete_my_account` (aplicada).
+- [x] Admins en `public.admin_users` (elbedev90@gmail.com). Para agregar otro: `insert into admin_users(email) values ('...')` + `ADMIN_EMAILS` en Vercel.
+- [ ] Auth → URL Configuration: Site URL `https://vallartapp.vercel.app`; Redirect URLs `vallartapp://auth/callback` y `https://vallartapp.vercel.app/**`.
+- [ ] Auth → Providers → Apple: Enable, Client IDs = `com.bener.VallartApp` (para login nativo no hace falta secret).
+- [ ] API Keys → Legacy API keys → Disable (mata la service_role filtrada; app y panel ya usan las llaves nuevas).
+- [ ] Edge Functions: borrar `create-payment-intent`; Secrets: borrar `STRIPE_SECRET_KEY`.
+- [ ] Auth → Users → Add user: tu cuenta admin (si no existe) y la cuenta demo para Apple (Auto Confirm).
+- [ ] Revocar el access token `sbp_…` usado en la sesión con Claude.
+- [ ] (Después) SMTP propio: el integrado solo manda 2 correos/hora.
+- [ ] (Push) llave APNs `.p8` → secrets `APNS_*`; y proteger `send-push-notification` (hoy verify_jwt=false, cualquiera puede llamarla).
+- [ ] (Después) Google: crear OAuth client en Google Cloud, configurarlo en Supabase y poner `googleSignInEnabled = true` en `AppConfig.swift`.
 
 ## 2. Panel admin (Next.js, raíz del repo)
 - [x] Desplegado en Vercel (deploy automático en cada push a `main`).
@@ -18,8 +24,7 @@
 
 ## 3. App iOS
 - [x] Panel en Vercel: https://vallartapp.vercel.app (proyecto `vallartapp`). Si compras dominio, cambiar `webBaseURL` en `VallartApp/AppConfig.swift`.
-- [ ] Correo de soporte real en `AppConfig.swift` (`supportEmail`) y `src/lib/site.ts`.
-- [ ] Confirmar que `support@…` recibe correo.
+- [x] Correo de soporte: elbedev90@gmail.com.
 - [ ] Reemplazar el ícono provisional (`Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, 1024×1024 sin transparencia).
 - [ ] Xcode → Product → Archive → Distribute → App Store Connect.
 
