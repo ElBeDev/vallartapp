@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { site } from '@/lib/site'
 import {
   Star, MessageSquare, Eye, ImageIcon,
   MapPin, Phone, Globe, Instagram,
@@ -73,7 +74,7 @@ export default async function BizDashboardPage() {
             Your business hasn&apos;t been linked to a listing on VallartApp yet. Contact us to get set up.
           </p>
           <a
-            href="mailto:hello@vallartapp.com?subject=Link my business listing"
+            href={`mailto:${site.supportEmail}?subject=Link my business listing`}
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
           >
             Contact us to link your listing
@@ -261,7 +262,7 @@ export default async function BizDashboardPage() {
                 Upgrade to Standard or Premium to appear at the top of search results, get a featured map pin, and reply to reviews.
               </p>
               <a
-                href="mailto:hello@vallartapp.com?subject=Upgrade my VallartApp plan"
+                href={`mailto:${site.supportEmail}?subject=Upgrade my VallartApp plan`}
                 className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
               >
                 <Crown className="h-4 w-4" /> Upgrade Plan

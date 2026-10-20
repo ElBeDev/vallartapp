@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { BarChart2, TrendingUp, Star, MessageSquare, ImageIcon, Crown } from 'lucide-react'
+import { site } from '@/lib/site'
 
 export default async function BizAnalyticsPage() {
   const supabase = await createClient()
@@ -40,7 +41,7 @@ export default async function BizAnalyticsPage() {
             Track views, review trends, and performance insights. Available on Standard and Premium plans.
           </p>
           <a
-            href="mailto:hello@vallartapp.com?subject=Upgrade to Standard"
+            href={`mailto:${site.supportEmail}?subject=Upgrade to Standard`}
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition"
           >
             <Crown className="h-4 w-4" /> Upgrade to Standard — $29/mo

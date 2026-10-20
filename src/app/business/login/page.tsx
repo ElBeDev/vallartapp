@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { MapPin, Loader2, Building2, Mail, ArrowRight } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { site } from '@/lib/site'
 
 function BusinessLoginForm() {
   const router       = useRouter()
@@ -142,7 +143,7 @@ function BusinessLoginForm() {
         {/* Footer note */}
         <p className="text-center text-slate-500 text-xs mt-6">
           Not registered yet?{' '}
-          <a href="mailto:hello@vallartapp.com" className="text-orange-400 hover:text-orange-300">
+          <a href={`mailto:${site.supportEmail}`} className="text-orange-400 hover:text-orange-300">
             Contact us to list your business
           </a>
         </p>

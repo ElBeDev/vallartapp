@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { useDropzone } from 'react-dropzone'
 import { Loader2, Upload, X, Save, Globe, Phone, Instagram, Clock, MapPin } from 'lucide-react'
 import Image from 'next/image'
+import { site } from '@/lib/site'
 
 interface BizListingFormProps {
   listing: Record<string, unknown>
@@ -242,7 +243,7 @@ export default function BizListingForm({ listing, plan }: BizListingFormProps) {
         {!isPremium && !isStandard && (
           <p className="text-slate-500 text-xs">
             Free plan: up to {MAX_PHOTOS_FREE} photos.{' '}
-            <a href="mailto:hello@vallartapp.com?subject=Upgrade plan" className="text-orange-400 hover:text-orange-300">
+            <a href={`mailto:${site.supportEmail}?subject=Upgrade plan`} className="text-orange-400 hover:text-orange-300">
               Upgrade to Standard
             </a>{' '}
             for up to {MAX_PHOTOS_STANDARD} photos.

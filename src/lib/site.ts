@@ -2,7 +2,7 @@
 // VallartApp/AppConfig.swift on iOS when the app is renamed.
 export const site = {
   appName: 'VallartApp',
-  supportEmail: 'support@vallartapp.com',
+  supportEmail: 'elbedev90@gmail.com',
   // Responsible party for the privacy notice (LFPDPPP, Mexico)
   owner: 'Eduardo Benavides',
   city: 'Puerto Vallarta, Jalisco, México',

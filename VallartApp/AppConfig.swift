@@ -6,7 +6,7 @@ import Foundation
 enum AppConfig {
     static let appName      = "VallartApp"
     static let tagline      = "Puerto Vallarta in your pocket"
-    static let supportEmail = "support@vallartapp.com"
+    static let supportEmail = "elbedev90@gmail.com"
 
     // Public site served by the admin panel (Next.js). Must be live before App Review.
     static let webBaseURL   = URL(string: "https://vallartapp.vercel.app")!

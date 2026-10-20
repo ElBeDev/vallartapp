@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Star, MessageSquare } from 'lucide-react'
+import { site } from '@/lib/site'
 
 export default async function BizReviewsPage() {
   const supabase = await createClient()
@@ -110,7 +111,7 @@ export default async function BizReviewsPage() {
 
       {!canReply && reviews.length > 0 && (
         <p className="text-slate-500 text-xs text-center mt-4">
-          <a href="mailto:hello@vallartapp.com?subject=Upgrade plan" className="text-orange-400 hover:text-orange-300">
+          <a href={`mailto:${site.supportEmail}?subject=Upgrade plan`} className="text-orange-400 hover:text-orange-300">
             Upgrade to Standard
           </a>{' '}
           to reply to reviews.
