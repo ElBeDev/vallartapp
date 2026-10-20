@@ -43,6 +43,10 @@ struct VallartAppApp: App {
                         auth.handleURL(url)
                     }
                     .task {
+#if DEBUG
+                        // No permission alert over App Store screenshots
+                        if UserDefaults.standard.object(forKey: "screenshotTab") != nil { return }
+#endif
                         await push.requestPermissionAndRegister()
                     }
                     .onChange(of: auth.isLoggedIn) { _, loggedIn in

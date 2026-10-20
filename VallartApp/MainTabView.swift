@@ -38,6 +38,16 @@ struct MainTabView: View {
         .sheet(item: $push.pendingDeepLink) { target in
             DeepLinkDetailView(target: target)
         }
+#if DEBUG
+        // App Store screenshots: `-screenshotTab <n>` / `-screenshotListing <uuid>` launch arguments
+        .onAppear {
+            let args = UserDefaults.standard
+            selectedTab = args.integer(forKey: "screenshotTab")
+            if let id = args.string(forKey: "screenshotListing").flatMap(UUID.init(uuidString:)) {
+                push.pendingDeepLink = .listing(id)
+            }
+        }
+#endif
     }
 }
 

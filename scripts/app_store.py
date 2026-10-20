@@ -6,6 +6,7 @@
     python3 scripts/app_store.py edad          # cuestionario de clasificación por edad
     python3 scripts/app_store.py precio        # gratis + disponible en todos los países
     python3 scripts/app_store.py build         # asigna a la versión 1.0 el build procesado más nuevo
+    python3 scripts/app_store.py capturas      # sube build/screenshots/{es,en} (scripts/screenshots.sh)
     python3 scripts/app_store.py get <ruta>    # lee cualquier cosa de la API
 
 Todo es ENSAYO si no lleva --de-verdad: dice qué haría sin mandar nada. Nada de esto manda la app a revisión.
@@ -296,6 +297,52 @@ def cmd_precio():
                       "relationships": {"territory": rel("territories", t)}} for t in territorios]})
 
 
+CAPTURAS = {"es-MX": "es", "en-US": "en"}   # carpeta de build/screenshots/ (scripts/screenshots.sh)
+TIPO_CAPTURA = "APP_IPHONE_67"              # iPhone 6.9" (1320×2868)
+
+
+def cmd_capturas():
+    import hashlib
+    raiz = Path(__file__).resolve().parent.parent / "build/screenshots"
+    v = version()
+    locs = {x["attributes"]["locale"]: x["id"]
+            for x in leer(f"/v1/appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]}
+    for loc, carpeta in CAPTURAS.items():
+        pngs = sorted((raiz / carpeta).glob("*.png"))
+        if not pngs:
+            sys.exit(f"No hay capturas en {raiz / carpeta}: corre scripts/screenshots.sh")
+        print(f"{loc}: {len(pngs)} capturas")
+        sets = leer(f"/v1/appStoreVersionLocalizations/{locs[loc]}/appScreenshotSets")["data"]
+        actual = next((s for s in sets if s["attributes"]["screenshotDisplayType"] == TIPO_CAPTURA), None)
+        if actual:
+            for vieja in leer(f"/v1/appScreenshotSets/{actual['id']}/appScreenshots")["data"]:
+                hacer(f"borrar captura anterior {vieja['attributes']['fileName']}", "DELETE",
+                      f"/v1/appScreenshots/{vieja['id']}")
+            set_id = actual["id"]
+        else:
+            d = hacer(f"crear juego de capturas {TIPO_CAPTURA}", "POST", "/v1/appScreenshotSets",
+                      {"data": {"type": "appScreenshotSets", "attributes": {"screenshotDisplayType": TIPO_CAPTURA},
+                                "relationships": {"appStoreVersionLocalization": rel("appStoreVersionLocalizations",
+                                                                                     locs[loc])}}})
+            set_id = d["data"]["id"] if d else "(nuevo)"
+        for png in pngs:
+            datos = png.read_bytes()
+            d = hacer(f"subir {png.name}", "POST", "/v1/appScreenshots",
+                      {"data": {"type": "appScreenshots",
+                                "attributes": {"fileName": png.name, "fileSize": len(datos)},
+                                "relationships": {"appScreenshotSet": rel("appScreenshotSets", set_id)}}})
+            if not d:
+                continue
+            for op in d["data"]["attributes"]["uploadOperations"]:
+                parte = datos[op["offset"]:op["offset"] + op["length"]]
+                req = urllib.request.Request(op["url"], data=parte, method=op["method"],
+                                             headers={h["name"]: h["value"] for h in op["requestHeaders"]})
+                urllib.request.urlopen(req, timeout=120).read()
+            hacer(f"confirmar {png.name}", "PATCH", f"/v1/appScreenshots/{d['data']['id']}",
+                  {"data": {"type": "appScreenshots", "id": d["data"]["id"],
+                            "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(datos).hexdigest()}}})
+
+
 def cmd_build():
     v = version()
     listos = [b for b in builds() if b["attributes"]["processingState"] == "VALID" and not b["attributes"]["expired"]]
@@ -313,6 +360,6 @@ if __name__ == "__main__":
         print(json.dumps(leer(args[1], ok=(200, 404)), indent=1, ensure_ascii=False)[:6000])
     else:
         {"estado": cmd_estado, "ficha": cmd_ficha, "edad": cmd_edad, "precio": cmd_precio,
-         "build": cmd_build}[orden]()
+         "build": cmd_build, "capturas": cmd_capturas}[orden]()
         if not DE_VERDAD and orden != "estado":
             print("\n(ensayo: no se mandó nada; con --de-verdad se aplica)")
