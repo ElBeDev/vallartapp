@@ -8,6 +8,9 @@ enum AppConfig {
     static let tagline      = "Puerto Vallarta in your pocket"
     static let supportEmail = "elbedev90@gmail.com"
 
+    // Flip on once the Google provider has OAuth credentials in Supabase Auth.
+    static let googleSignInEnabled = false
+
     // Public site served by the admin panel (Next.js). Must be live before App Review.
     static let webBaseURL   = URL(string: "https://vallartapp.vercel.app")!
 

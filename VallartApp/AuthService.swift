@@ -107,7 +107,8 @@ class AuthService: ObservableObject {
             let response = try await supabase.auth.signUp(
                 email: email,
                 password: password,
-                data: ["name": AnyJSON.string(name)]
+                data: ["name": AnyJSON.string(name)],
+                redirectTo: URL(string: "vallartapp://auth/callback")
             )
             // signUp returns AuthResponse — session is optional until email confirmed
             if let s = response.session {

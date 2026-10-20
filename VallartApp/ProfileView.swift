@@ -485,7 +485,7 @@ struct LoginView: View {
                             primaryButton
                             divider
                             appleSignInButton
-                            googleSignInButton
+                            if AppConfig.googleSignInEnabled { googleSignInButton }
                         }
 
                         if let err = auth.errorMessage {

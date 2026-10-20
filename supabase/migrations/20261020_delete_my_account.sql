@@ -1,8 +1,7 @@
 -- Migration: self-service account deletion (App Store guideline 5.1.1(v))
 -- Called from iOS: supabase.rpc("delete_my_account")
--- Deletes the caller's auth user. profiles, reviews and business_owners cascade
--- via their FKs to auth.users; the tables below are cleared explicitly in case
--- their FKs were created without ON DELETE CASCADE.
+-- Deletes the caller's auth user. On the live DB the FKs from profiles, reviews
+-- and business_owners to auth.users are NO ACTION, so those rows go first.
 
 CREATE OR REPLACE FUNCTION public.delete_my_account()
 RETURNS void
@@ -23,8 +22,9 @@ BEGIN
   IF to_regclass('public.notifications') IS NOT NULL THEN
     DELETE FROM public.notifications WHERE user_id = uid;
   END IF;
-  DELETE FROM public.reviews  WHERE user_id = uid;
-  DELETE FROM public.profiles WHERE id = uid;
+  DELETE FROM public.business_owners WHERE user_id = uid;
+  DELETE FROM public.reviews         WHERE user_id = uid;
+  DELETE FROM public.profiles        WHERE id = uid;
 
   DELETE FROM auth.users WHERE id = uid;
 END;
