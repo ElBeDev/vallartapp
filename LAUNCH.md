@@ -5,11 +5,11 @@
 - [x] RLS activo en todas las tablas + políticas de Storage (`20261020_rls_hardening.sql`, aplicado).
 - [x] Función `delete_my_account` (aplicada).
 - [x] Admins en `public.admin_users` (elbedev90@gmail.com). Para agregar otro: `insert into admin_users(email) values ('...')` + `ADMIN_EMAILS` en Vercel.
-- [ ] Auth → URL Configuration: Site URL `https://vallartapp.vercel.app`; Redirect URLs `vallartapp://auth/callback` y `https://vallartapp.vercel.app/**`.
+- [x] Auth → URL Configuration: Site URL `https://vallartapp.vercel.app`; Redirect URLs `vallartapp://auth/callback` y `https://vallartapp.vercel.app/**`.
 - [ ] Auth → Providers → Apple: Enable, Client IDs = `com.bener.VallartApp` (para login nativo no hace falta secret).
-- [ ] API Keys → Legacy API keys → Disable (mata la service_role filtrada; app y panel ya usan las llaves nuevas).
-- [ ] Edge Functions: borrar `create-payment-intent`; Secrets: borrar `STRIPE_SECRET_KEY`.
-- [ ] Auth → Users → Add user: tu cuenta admin (si no existe) y la cuenta demo para Apple (Auto Confirm).
+- [x] API Keys → Legacy API keys → Disable (mata la service_role filtrada; app y panel ya usan las llaves nuevas).
+- [x] Edge Functions: borrar `create-payment-intent`; Secrets: borrar `STRIPE_SECRET_KEY`.
+- [x] Auth → Users → Add user: tu cuenta admin (si no existe) y la cuenta demo para Apple (Auto Confirm).
 - [ ] Revocar el access token `sbp_…` usado en la sesión con Claude.
 - [ ] (Después) SMTP propio: el integrado solo manda 2 correos/hora.
 - [ ] (Push) llave APNs `.p8` → secrets `APNS_*`; y proteger `send-push-notification` (hoy verify_jwt=false, cualquiera puede llamarla).
