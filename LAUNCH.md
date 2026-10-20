@@ -10,12 +10,15 @@
 - [ ] (Opcional) borrar la función `create-payment-intent` ya desplegada.
 
 ## 2. Panel admin (Next.js, raíz del repo)
-- [ ] Desplegar: `npm ci && npm run build && npm start` (Node 20+).
-- [ ] Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS` (obligatorio; vacío = nadie entra).
-- [ ] Verificar públicas: `/privacy`, `/terms`, `/support`.
+- [x] Desplegado en Vercel (deploy automático en cada push a `main`).
+- [x] Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS` (obligatorio; vacío = nadie entra).
+- [x] Verificar públicas: `/privacy`, `/terms`, `/support` (200 OK).
+- [ ] Actualizar `SUPABASE_SERVICE_ROLE_KEY` en Vercel después de rotarla y hacer Redeploy.
+- [ ] Borrar el proyecto duplicado `vallartapp-4kx5` en Vercel.
 
 ## 3. App iOS
-- [ ] Poner el dominio real en `VallartApp/AppConfig.swift` (`webBaseURL`, `supportEmail`) y en `src/lib/site.ts`.
+- [x] Panel en Vercel: https://vallartapp.vercel.app (proyecto `vallartapp`). Si compras dominio, cambiar `webBaseURL` en `VallartApp/AppConfig.swift`.
+- [ ] Correo de soporte real en `AppConfig.swift` (`supportEmail`) y `src/lib/site.ts`.
 - [ ] Confirmar que `support@…` recibe correo.
 - [ ] Reemplazar el ícono provisional (`Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, 1024×1024 sin transparencia).
 - [ ] Xcode → Product → Archive → Distribute → App Store Connect.

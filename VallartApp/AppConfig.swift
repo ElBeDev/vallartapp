@@ -9,7 +9,7 @@ enum AppConfig {
     static let supportEmail = "support@vallartapp.com"
 
     // Public site served by the admin panel (Next.js). Must be live before App Review.
-    static let webBaseURL   = URL(string: "https://vallartapp.com")!
+    static let webBaseURL   = URL(string: "https://vallartapp.vercel.app")!
 
     static var privacyURL:  URL { webBaseURL.appendingPathComponent("privacy") }
     static var termsURL:    URL { webBaseURL.appendingPathComponent("terms") }
