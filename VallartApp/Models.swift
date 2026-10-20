@@ -169,6 +169,7 @@ struct Review: Identifiable, Codable {
     var text: String
     var date: Date
     var photos: [String]
+    var userID: UUID? = nil
 
     var formattedDate: String {
         let f = DateFormatter()

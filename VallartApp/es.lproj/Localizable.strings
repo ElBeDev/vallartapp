@@ -148,3 +148,21 @@
 "general.done"               = "Listo";
 "general.ok"                 = "OK";
 "general.error"              = "Algo salió mal";
+
+/* Settings */
+"settings.support"               = "Soporte";
+"settings.contact"               = "Contactar a Soporte";
+"settings.privacy"               = "Aviso de Privacidad";
+"settings.terms"                 = "Términos de Uso";
+"settings.deleteAccount"         = "Eliminar Cuenta";
+"settings.deleteAccount.footer"  = "Elimina permanentemente tu cuenta, perfil, reseñas y lugares guardados.";
+"settings.deleteAccount.title"   = "¿Eliminar tu cuenta?";
+"settings.deleteAccount.message" = "Esto elimina permanentemente tu cuenta y todos tus datos. No se puede deshacer.";
+"settings.deleteAccount.confirm" = "Eliminar";
+
+/* Review moderation */
+"review.options"             = "Opciones de reseña";
+"review.report"              = "Reportar Reseña";
+"review.block"               = "Bloquear Usuario";
+"review.block.title"         = "¿Bloquear a este usuario?";
+"review.block.message"       = "Ya no verás reseñas de este usuario.";

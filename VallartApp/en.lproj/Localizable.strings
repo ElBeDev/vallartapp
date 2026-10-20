@@ -148,3 +148,21 @@
 "general.done"               = "Done";
 "general.ok"                 = "OK";
 "general.error"              = "Something went wrong";
+
+/* Settings */
+"settings.support"               = "Support";
+"settings.contact"               = "Contact Support";
+"settings.privacy"               = "Privacy Policy";
+"settings.terms"                 = "Terms of Use";
+"settings.deleteAccount"         = "Delete Account";
+"settings.deleteAccount.footer"  = "Permanently deletes your account, profile, reviews and saved places.";
+"settings.deleteAccount.title"   = "Delete your account?";
+"settings.deleteAccount.message" = "This permanently deletes your account and all your data. This can't be undone.";
+"settings.deleteAccount.confirm" = "Delete";
+
+/* Review moderation */
+"review.options"             = "Review options";
+"review.report"              = "Report Review";
+"review.block"               = "Block User";
+"review.block.title"         = "Block this user?";
+"review.block.message"       = "You won't see reviews from this user anymore.";

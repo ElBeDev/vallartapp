@@ -6,10 +6,12 @@ import Supabase
 
 protocol ListingRepositoryProtocol {
     func fetchAll() async throws -> [Listing]
+    func fetchPage(offset: Int, limit: Int) async throws -> [Listing]
     func fetchFeatured() async throws -> [Listing]
+    func fetchTrending(limit: Int) async throws -> [Listing]
     func fetchByCategory(_ category: ListingCategory) async throws -> [Listing]
     func fetchByID(_ id: UUID) async throws -> Listing
-    func search(query: String, category: ListingCategory?, neighborhood: Neighborhood?, openOnly: Bool, lgbtOnly: Bool) async throws -> [Listing]
+    func search(query: String, category: ListingCategory?, neighborhood: Neighborhood?, openOnly: Bool, lgbtOnly: Bool, priceRange: PriceRange?) async throws -> [Listing]
     func fetchReviews(for listingID: UUID) async throws -> [Review]
     func fetchReviews(byUserID userID: UUID) async throws -> [Review]
     func submitReview(_ review: ReviewInput) async throws
@@ -108,7 +110,8 @@ struct ReviewRow: Codable {
             rating: rating ?? 0,
             text: text ?? "",
             date: formatter.date(from: createdAt ?? "") ?? Date(),
-            photos: photos ?? []
+            photos: photos ?? [],
+            userID: userId.flatMap(UUID.init(uuidString:))
         )
     }
 }
@@ -139,6 +142,18 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
         return rows.map { $0.toListing() }
     }
 
+    func fetchPage(offset: Int, limit: Int) async throws -> [Listing] {
+        let rows: [ListingRow] = try await supabase
+            .from("listings")
+            .select()
+            .order("is_featured", ascending: false)
+            .order("rating", ascending: false)
+            .range(from: offset, to: offset + limit - 1)
+            .execute()
+            .value
+        return rows.map { $0.toListing() }
+    }
+
     func fetchFeatured() async throws -> [Listing] {
         let rows: [ListingRow] = try await supabase
             .from("listings")
@@ -147,6 +162,19 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
             .order("is_premium", ascending: false)
             .order("rating", ascending: false)
             .limit(10)
+            .execute()
+            .value
+        return rows.map { $0.toListing() }
+    }
+
+    func fetchTrending(limit: Int = 10) async throws -> [Listing] {
+        let rows: [ListingRow] = try await supabase
+            .from("listings")
+            .select()
+            .gte("review_count", value: 1)
+            .order("review_count", ascending: false)
+            .order("rating", ascending: false)
+            .limit(limit)
             .execute()
             .value
         return rows.map { $0.toListing() }
@@ -180,15 +208,16 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
         category: ListingCategory?,
         neighborhood: Neighborhood?,
         openOnly: Bool,
-        lgbtOnly: Bool
+        lgbtOnly: Bool,
+        priceRange: PriceRange?
     ) async throws -> [Listing] {
         var builder = supabase
             .from("listings")
             .select()
 
         if !query.isEmpty {
-            // PostgreSQL full-text search across name, description, tags
-            builder = builder.textSearch("name", query: query, type: .plain)
+            // Case-insensitive partial match across name and description
+            builder = builder.or("name.ilike.%\(query)%,description.ilike.%\(query)%")
         }
         if let cat = category {
             builder = builder.eq("category", value: cat.rawValue)
@@ -201,6 +230,9 @@ class SupabaseListingRepository: ListingRepositoryProtocol {
         }
         if lgbtOnly {
             builder = builder.eq("is_lgbt_friendly", value: true)
+        }
+        if let price = priceRange {
+            builder = builder.eq("price_range", value: price.rawValue)
         }
 
         let rows: [ListingRow] = try await builder

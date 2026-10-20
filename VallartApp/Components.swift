@@ -1,6 +1,24 @@
 import SwiftUI
 import Supabase
 
+// MARK: - ListingCategory color
+extension ListingCategory {
+    var color: Color {
+        switch self {
+        case .restaurants: return AppTheme.Colors.coral
+        case .bars:        return AppTheme.Colors.nightPurple
+        case .hotels:      return AppTheme.Colors.deepNavy
+        case .activities:  return AppTheme.Colors.teal
+        case .yachts:      return AppTheme.Colors.oceanBlue
+        case .rentals:     return AppTheme.Colors.goldenSun
+        case .events:      return AppTheme.Colors.coral
+        case .beaches:     return AppTheme.Colors.teal
+        case .shopping:    return AppTheme.Colors.deepNavy
+        case .spas:        return AppTheme.Colors.palmGreen
+        }
+    }
+}
+
 // MARK: - CategoryChipView
 struct CategoryChipView: View {
     let category: ListingCategory
@@ -36,7 +54,7 @@ struct CategoryGridCard: View {
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
                 .fill(cardGradient)
                 .frame(height: 110)
-                .shadow(color: cardColor.opacity(0.25), radius: 6, y: 3)
+                .shadow(color: category.color.opacity(0.25), radius: 6, y: 3)
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 Image(systemName: category.icon)
@@ -51,23 +69,8 @@ struct CategoryGridCard: View {
         }
     }
 
-    private var cardColor: Color {
-        switch category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
-
     private var cardGradient: LinearGradient {
-        LinearGradient(colors: [cardColor, cardColor.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        LinearGradient(colors: [category.color, category.color.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 }
 
@@ -116,6 +119,29 @@ struct ListingImageView: View {
     }
 }
 
+// MARK: - StarRatingView
+struct StarRatingView: View {
+    let rating: Double
+    var size: CGFloat = 12
+    var color: Color = AppTheme.Colors.goldenSun
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(1...5, id: \.self) { i in
+                Image(systemName: starName(for: i))
+                    .font(.system(size: size))
+                    .foregroundStyle(color)
+            }
+        }
+    }
+
+    private func starName(for i: Int) -> String {
+        if Double(i) <= rating { return "star.fill" }
+        if Double(i) - 0.5 <= rating { return "star.leadinghalf.filled" }
+        return "star"
+    }
+}
+
 // MARK: - FeaturedCardView
 struct FeaturedCardView: View {
     let listing: Listing
@@ -147,9 +173,7 @@ struct FeaturedCardView: View {
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.Colors.goldenSun)
+                    StarRatingView(rating: listing.rating, size: 10)
                     Text(String(format: "%.1f", listing.rating))
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(.white)
@@ -167,20 +191,7 @@ struct FeaturedCardView: View {
         .shadow(color: cardColor.opacity(0.3), radius: 8, y: 4)
     }
 
-    private var cardColor: Color {
-        switch listing.category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
+    private var cardColor: Color { listing.category.color }
 }
 
 // MARK: - ListingRowView
@@ -213,9 +224,7 @@ struct ListingRowView: View {
                     .font(AppTheme.Font.caption())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
                 HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.Colors.goldenSun)
+                    StarRatingView(rating: listing.rating, size: 10)
                     Text(String(format: "%.1f", listing.rating))
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
@@ -242,20 +251,7 @@ struct ListingRowView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
 
-    private var iconColor: Color {
-        switch listing.category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
+    private var iconColor: Color { listing.category.color }
 }
 
 // MARK: - EventCardView
@@ -264,12 +260,20 @@ struct EventCardView: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: AppTheme.Radius.xl)
-                .fill(LinearGradient(
-                    colors: [AppTheme.Colors.coral, AppTheme.Colors.nightPurple.opacity(0.8)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
-                .frame(width: 220, height: 140)
+            ListingImageView(
+                urlString: event.photos.first,
+                width: 220, height: 140,
+                cornerRadius: AppTheme.Radius.xl,
+                fallbackColor: AppTheme.Colors.coral
+            )
+
+            // Gradient overlay for text readability over photo or fallback
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.65)],
+                startPoint: .top, endPoint: .bottom
+            )
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
+            .frame(width: 220, height: 140)
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 HStack(spacing: AppTheme.Spacing.xs) {
@@ -288,6 +292,7 @@ struct EventCardView: View {
             }
             .padding(AppTheme.Spacing.md)
         }
+        .frame(width: 220, height: 140)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
         .shadow(color: AppTheme.Colors.coral.opacity(0.25), radius: 6, y: 3)
     }
@@ -325,7 +330,10 @@ struct FilterChip: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            Haptic.light()
+            action()
+        }) {
             HStack(spacing: 4) {
                 if let icon {
                     Image(systemName: icon)
@@ -404,6 +412,79 @@ struct FlowTagsView: View {
                     .clipShape(Capsule())
             }
         }
+    }
+}
+
+// MARK: - ShimmerView
+struct ShimmerView: View {
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: AppTheme.Colors.lightGray,          location: phase - 0.3),
+                .init(color: AppTheme.Colors.white.opacity(0.85), location: phase),
+                .init(color: AppTheme.Colors.lightGray,          location: phase + 0.3),
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+        .onAppear {
+            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                phase = 1.3
+            }
+        }
+    }
+}
+
+// MARK: - FeaturedCardSkeleton
+struct FeaturedCardSkeleton: View {
+    var body: some View {
+        ShimmerView()
+            .frame(width: 280, height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
+    }
+}
+
+// MARK: - ListingRowSkeleton
+struct ListingRowSkeleton: View {
+    var body: some View {
+        HStack(spacing: AppTheme.Spacing.md) {
+            ShimmerView()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                ShimmerView().frame(height: 14).clipShape(Capsule())
+                ShimmerView().frame(width: 160, height: 11).clipShape(Capsule())
+                ShimmerView().frame(width: 100, height: 11).clipShape(Capsule())
+            }
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.white)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+}
+
+// MARK: - EventRowSkeleton
+struct EventRowSkeleton: View {
+    var body: some View {
+        HStack(spacing: AppTheme.Spacing.md) {
+            ShimmerView()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                ShimmerView().frame(width: 80, height: 10).clipShape(Capsule())
+                ShimmerView().frame(height: 14).clipShape(Capsule())
+                ShimmerView().frame(width: 120, height: 11).clipShape(Capsule())
+            }
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.white)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
 }
 
@@ -565,6 +646,7 @@ struct WriteReviewView: View {
                 date: Date(),
                 photos: []
             )
+            Haptic.success()
             onSubmitted(newReview)
             dismiss()
         } catch {
@@ -622,26 +704,26 @@ struct MyReviewsView: View {
 
     // MARK: Reviews List
     private var reviewsList: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVStack(spacing: AppTheme.Spacing.sm) {
-                ForEach(reviews) { review in
-                    MyReviewRowView(
-                        review: review,
-                        listingName: listingNames[review.listingID] ?? "Place"
-                    )
-                    .padding(.horizontal, AppTheme.Spacing.md)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            Task { await deleteReview(review) }
-                        } label: {
-                            Label("Delete", systemImage: "trash.fill")
-                        }
+        List {
+            ForEach(reviews) { review in
+                MyReviewRowView(
+                    review: review,
+                    listingName: listingNames[review.listingID] ?? "Place"
+                )
+                .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.md, bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.md))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        Task { await deleteReview(review) }
+                    } label: {
+                        Label("Delete", systemImage: "trash.fill")
                     }
                 }
             }
-            .padding(.vertical, AppTheme.Spacing.md)
-            .padding(.bottom, AppTheme.Spacing.xxl)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 
     // MARK: Data
@@ -705,16 +787,7 @@ struct MyReviewRowView: View {
                         .foregroundStyle(AppTheme.Colors.mediumGray)
                 }
                 Spacer()
-                // Star rating badge
-                HStack(spacing: 3) {
-                    ForEach(1...5, id: \.self) { star in
-                        Image(systemName: Double(star) <= review.rating ? "star.fill" : "star")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Double(star) <= review.rating
-                                ? AppTheme.Colors.goldenSun
-                                : AppTheme.Colors.mediumGray.opacity(0.4))
-                    }
-                }
+                StarRatingView(rating: review.rating, size: 11)
             }
             // Review text
             Text(review.text)
@@ -727,5 +800,35 @@ struct MyReviewRowView: View {
         .background(AppTheme.Colors.white)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
         .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+    }
+}
+
+// MARK: - URL Identifiable (for .sheet(item:))
+extension URL: @retroactive Identifiable {
+    public var id: String { absoluteString }
+}
+
+// MARK: - SafariView
+import SafariServices
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    var onDismiss: (() -> Void)? = nil
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let vc = SFSafariViewController(url: url)
+        vc.delegate = context.coordinator
+        return vc
+    }
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(onDismiss: onDismiss) }
+
+    class Coordinator: NSObject, SFSafariViewControllerDelegate {
+        let onDismiss: (() -> Void)?
+        init(onDismiss: (() -> Void)?) { self.onDismiss = onDismiss }
+        func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+            onDismiss?()
+        }
     }
 }

@@ -13,7 +13,7 @@ struct MainTabView: View {
                 .tabItem { Label(String(localized: "tab.explore"), systemImage: "safari.fill") }
                 .tag(0)
 
-            MapExploreView(listings: exploreVM.popularListings)
+            MapExploreView()
                 .tabItem { Label(String(localized: "tab.map"), systemImage: "map.fill") }
                 .tag(1)
 
@@ -35,5 +35,62 @@ struct MainTabView: View {
                 .tag(5)
         }
         .tint(AppTheme.Colors.coral)
+        .sheet(item: $push.pendingDeepLink) { target in
+            DeepLinkDetailView(target: target)
+        }
+    }
+}
+
+// MARK: - DeepLinkDetailView
+// Fetches listing or event by ID and presents the appropriate detail view.
+struct DeepLinkDetailView: View {
+    let target: DeepLinkTarget
+    @State private var listing: Listing?
+    @State private var event: Event?
+    @State private var isLoading = true
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(AppTheme.Colors.sand)
+                } else if let listing {
+                    ListingDetailView(listing: listing)
+                } else if let event {
+                    EventDetailView(event: event)
+                } else {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 48))
+                            .foregroundStyle(AppTheme.Colors.mediumGray)
+                        Text("Content not found")
+                            .font(AppTheme.Font.headline())
+                            .foregroundStyle(AppTheme.Colors.deepNavy)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppTheme.Colors.sand)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") { dismiss() }
+                        .foregroundStyle(AppTheme.Colors.coral)
+                }
+            }
+        }
+        .task { await fetchContent() }
+    }
+
+    private func fetchContent() async {
+        switch target {
+        case .listing(let id):
+            listing = try? await SupabaseListingRepository.shared.fetchByID(id)
+        case .event(let id):
+            event = try? await SupabaseEventRepository.shared.fetchByID(id)
+        }
+        isLoading = false
     }
 }

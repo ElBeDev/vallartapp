@@ -7,11 +7,26 @@ struct ListingDetailView: View {
     @StateObject private var auth = AuthService.shared
     @State private var reviews: [Review] = []
     @State private var reviewsLoaded = false
+    @AppStorage(ReviewModeration.blockedKey) private var blockedUserIDs = ""
+
+    private var visibleReviews: [Review] {
+        let blocked = ReviewModeration.blockedSet(blockedUserIDs)
+        return reviews.filter { review in
+            guard let uid = review.userID else { return true }
+            return !blocked.contains(uid.uuidString)
+        }
+    }
     @State private var showDirectionsSheet = false
     @State private var showWriteReview = false
     private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
 
     var isSaved: Bool { auth.isSaved(listing.id) }
+
+    private var shareContent: String {
+        var lines = [listing.name, listing.neighborhood.displayName, listing.address]
+        if let website = listing.website { lines.append(website) }
+        return lines.joined(separator: "\n")
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -100,8 +115,14 @@ struct ListingDetailView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .automatic) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                ShareLink(item: shareContent) {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 2)
+                }
                 Button {
+                    Haptic.medium()
                     Task { await auth.toggleSaved(listingID: listing.id) }
                 } label: {
                     Image(systemName: isSaved ? "heart.fill" : "heart")
@@ -115,14 +136,30 @@ struct ListingDetailView: View {
     // MARK: Hero
     private var heroSection: some View {
         ZStack(alignment: .bottomLeading) {
-            // Real photo full-width
-            ListingImageView(
-                urlString: listing.photos.first,
-                width: UIScreen.main.bounds.width,
-                height: 300,
-                cornerRadius: 0,
-                fallbackColor: categoryColor
-            )
+            let w = UIScreen.main.bounds.width
+            if listing.photos.count > 1 {
+                TabView {
+                    ForEach(listing.photos, id: \.self) { urlString in
+                        ListingImageView(
+                            urlString: urlString,
+                            width: w,
+                            height: 300,
+                            cornerRadius: 0,
+                            fallbackColor: categoryColor
+                        )
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .frame(height: 300)
+            } else {
+                ListingImageView(
+                    urlString: listing.photos.first,
+                    width: w,
+                    height: 300,
+                    cornerRadius: 0,
+                    fallbackColor: categoryColor
+                )
+            }
 
             // Bottom gradient for badge readability
             LinearGradient(
@@ -154,20 +191,7 @@ struct ListingDetailView: View {
         )
     }
 
-    private var categoryColor: Color {
-        switch listing.category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
+    private var categoryColor: Color { listing.category.color }
 
     // MARK: Title
     private var titleSection: some View {
@@ -179,9 +203,7 @@ struct ListingDetailView: View {
             HStack(spacing: AppTheme.Spacing.sm) {
                 // Rating
                 HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .foregroundStyle(AppTheme.Colors.goldenSun)
-                        .font(.caption)
+                    StarRatingView(rating: listing.rating, size: 13)
                     Text(String(format: "%.1f", listing.rating))
                         .font(AppTheme.Font.label())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
@@ -360,7 +382,7 @@ struct ListingDetailView: View {
                 .background(AppTheme.Colors.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             } else {
-                ForEach(reviews.prefix(5)) { review in
+                ForEach(visibleReviews.prefix(5)) { review in
                     ReviewRowView(review: review)
                 }
             }
@@ -373,26 +395,75 @@ struct CategoryListView: View {
     let category: ListingCategory
     @State private var listings: [Listing] = []
     @State private var isLoading = true
+    @State private var selectedNeighborhood: Neighborhood? = nil
+    @State private var openOnly = false
     private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
+
+    private var filteredListings: [Listing] {
+        listings.filter { listing in
+            (selectedNeighborhood == nil || listing.neighborhood == selectedNeighborhood) &&
+            (!openOnly || listing.isOpen)
+        }
+    }
+
+    // Only show neighborhoods that actually appear in the fetched listings
+    private var availableNeighborhoods: [Neighborhood] {
+        Array(Set(listings.map { $0.neighborhood })).sorted { $0.displayName < $1.displayName }
+    }
 
     var body: some View {
         ZStack {
             AppTheme.Colors.sand.ignoresSafeArea()
-            if isLoading {
-                ProgressView()
-            } else {
-                ScrollView(showsIndicators: false) {
-                    LazyVStack(spacing: AppTheme.Spacing.sm) {
-                        ForEach(listings) { listing in
-                            NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                ListingRowView(listing: listing)
+            VStack(spacing: 0) {
+                if !listings.isEmpty {
+                    filterBar
+                }
+                if isLoading {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: AppTheme.Spacing.sm) {
+                            ForEach(0..<5, id: \.self) { _ in
+                                ListingRowSkeleton().padding(.horizontal, AppTheme.Spacing.md)
                             }
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, AppTheme.Spacing.md)
+                        }
+                        .padding(.vertical, AppTheme.Spacing.md)
+                    }
+                } else if filteredListings.isEmpty {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: 52))
+                            .foregroundStyle(AppTheme.Colors.mediumGray)
+                        Text("No places match your filters")
+                            .font(AppTheme.Font.headline())
+                            .foregroundStyle(AppTheme.Colors.deepNavy)
+                        Button {
+                            selectedNeighborhood = nil
+                            openOnly = false
+                        } label: {
+                            Text("Clear filters")
+                                .font(AppTheme.Font.label())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, AppTheme.Spacing.lg)
+                                .padding(.vertical, AppTheme.Spacing.sm)
+                                .background(AppTheme.Colors.coral)
+                                .clipShape(Capsule())
                         }
                     }
-                    .padding(.vertical, AppTheme.Spacing.md)
-                    .padding(.bottom, AppTheme.Spacing.xxl)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: AppTheme.Spacing.sm) {
+                            ForEach(filteredListings) { listing in
+                                NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                    ListingRowView(listing: listing)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, AppTheme.Spacing.md)
+                            }
+                        }
+                        .padding(.vertical, AppTheme.Spacing.md)
+                        .padding(.bottom, AppTheme.Spacing.xxl)
+                    }
                 }
             }
         }
@@ -407,11 +478,62 @@ struct CategoryListView: View {
             isLoading = false
         }
     }
+
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                FilterChip(title: "All", isSelected: selectedNeighborhood == nil && !openOnly) {
+                    selectedNeighborhood = nil
+                    openOnly = false
+                }
+                FilterChip(title: "Open Now", icon: "clock", isSelected: openOnly) {
+                    openOnly.toggle()
+                }
+                ForEach(availableNeighborhoods, id: \.self) { hood in
+                    FilterChip(title: hood.displayName, isSelected: selectedNeighborhood == hood) {
+                        selectedNeighborhood = selectedNeighborhood == hood ? nil : hood
+                    }
+                }
+            }
+            .padding(.horizontal, AppTheme.Spacing.md)
+            .padding(.vertical, AppTheme.Spacing.sm)
+        }
+        .background(.ultraThinMaterial)
+    }
 }
 
 // MARK: - ReviewRowView
+// Report / block for user-generated reviews (App Store guideline 1.2).
+// Blocks are per-device; reports go to support by email.
+enum ReviewModeration {
+    static let blockedKey = "blockedReviewUserIDs"
+
+    static func blockedSet(_ raw: String) -> Set<String> {
+        Set(raw.split(separator: ",").map(String.init))
+    }
+
+    static func reportURL(for review: Review) -> URL? {
+        var c = URLComponents()
+        c.scheme = "mailto"
+        c.path = AppConfig.supportEmail
+        c.queryItems = [
+            URLQueryItem(name: "subject", value: "Report review \(review.id.uuidString)"),
+            URLQueryItem(name: "body", value: "Review by \(review.authorName):\n\"\(review.text)\"\n\nReason: ")
+        ]
+        return c.url
+    }
+}
+
 struct ReviewRowView: View {
     let review: Review
+    @AppStorage(ReviewModeration.blockedKey) private var blockedUserIDs = ""
+    @Environment(\.openURL) private var openURL
+    @State private var showBlockConfirm = false
+
+    private var canBlock: Bool {
+        guard let uid = review.userID else { return false }
+        return uid != AuthService.shared.currentUserID
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
@@ -429,13 +551,30 @@ struct ReviewRowView: View {
                 }
                 Spacer()
                 HStack(spacing: 2) {
-                    Image(systemName: "star.fill")
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.Colors.goldenSun)
+                    StarRatingView(rating: review.rating, size: 10)
                     Text(String(format: "%.1f", review.rating))
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
                 }
+                Menu {
+                    Button {
+                        if let url = ReviewModeration.reportURL(for: review) { openURL(url) }
+                    } label: {
+                        Label(String(localized: "review.report"), systemImage: "flag")
+                    }
+                    if canBlock {
+                        Button(role: .destructive) { showBlockConfirm = true } label: {
+                            Label(String(localized: "review.block"), systemImage: "hand.raised")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.Colors.mediumGray)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(String(localized: "review.options"))
             }
             Text(review.text)
                 .font(AppTheme.Font.body())
@@ -446,6 +585,17 @@ struct ReviewRowView: View {
         .background(AppTheme.Colors.white)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
         .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+        .confirmationDialog(String(localized: "review.block.title"), isPresented: $showBlockConfirm, titleVisibility: .visible) {
+            Button(String(localized: "review.block"), role: .destructive) {
+                guard let uid = review.userID?.uuidString else { return }
+                var blocked = ReviewModeration.blockedSet(blockedUserIDs)
+                blocked.insert(uid)
+                blockedUserIDs = blocked.joined(separator: ",")
+                Haptic.success()
+            }
+        } message: {
+            Text(String(localized: "review.block.message"))
+        }
     }
 }
 

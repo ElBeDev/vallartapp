@@ -20,7 +20,6 @@ swift_files = %w[
   PremiumView.swift
   ProfileView.swift
   SearchView.swift
-  StripeService.swift
   SupabaseService.swift
   VallartAppApp.swift
 ]
@@ -49,10 +48,6 @@ supabase_pkg_ref    = fake_uuid("pkg_supabase")
 supabase_prod_dep   = fake_uuid("proddep_supabase")
 supabase_build_file = fake_uuid("buildfile_supabase_pkg")
 
-# SPM — Stripe package UUIDs
-stripe_pkg_ref    = fake_uuid("pkg_stripe")
-stripe_prod_dep   = fake_uuid("proddep_stripe")
-stripe_build_file = fake_uuid("buildfile_stripe_pkg")
 
 # Localizable.strings (en + es variant group)
 loc_en_ref         = fake_uuid("fileref_loc_en")
@@ -74,7 +69,6 @@ pbxproj = <<~PBXPROJ
 #{swift_files.map { |f| "\t\t#{build_files[f]} /* #{f} in Sources */ = {isa = PBXBuildFile; fileRef = #{file_refs[f]} /* #{f} */; };" }.join("\n")}
         #{assets_build_file} /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = #{assets_file_ref} /* Assets.xcassets */; };
         #{supabase_build_file} /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = #{supabase_prod_dep} /* Supabase */; };
-        #{stripe_build_file} /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = #{stripe_prod_dep} /* StripePaymentSheet */; };
         #{loc_en_build} /* en in Resources */ = {isa = PBXBuildFile; fileRef = #{loc_en_ref} /* en */; };
         #{loc_es_build} /* es in Resources */ = {isa = PBXBuildFile; fileRef = #{loc_es_ref} /* es */; };
 /* End PBXBuildFile section */
@@ -97,7 +91,6 @@ pbxproj = <<~PBXPROJ
             buildActionMask = 2147483647;
             files = (
                 #{supabase_build_file} /* Supabase in Frameworks */,
-                #{stripe_build_file} /* StripePaymentSheet in Frameworks */,
             );
             runOnlyForDeploymentPostprocessing = 0;
         };
@@ -148,7 +141,6 @@ pbxproj = <<~PBXPROJ
             name = VallartApp;
             packageProductDependencies = (
                 #{supabase_prod_dep} /* Supabase */,
-                #{stripe_prod_dep} /* StripePaymentSheet */,
             );
             productName = VallartApp;
             productReference = A6A849C82F6634A30015E693 /* VallartApp.app */;
@@ -181,7 +173,6 @@ pbxproj = <<~PBXPROJ
             minimizedProjectReferenceProxies = 1;
             packageReferences = (
                 #{supabase_pkg_ref} /* XCRemoteSwiftPackageReference "supabase-swift" */,
-                #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */,
             );
             preferredProjectObjectVersion = 77;
             productRefGroup = A6A849C92F6634A30015E693 /* Products */;
@@ -448,9 +439,7 @@ pbxproj = <<~PBXPROJ
                 minimumVersion = 2.0.0;
             };
         };
-        #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
             isa = XCRemoteSwiftPackageReference;
-            repositoryURL = "https://github.com/stripe/stripe-ios.git";
             requirement = {
                 kind = upToNextMajorVersion;
                 minimumVersion = 24.0.0;
@@ -464,10 +453,7 @@ pbxproj = <<~PBXPROJ
             package = #{supabase_pkg_ref} /* XCRemoteSwiftPackageReference "supabase-swift" */;
             productName = Supabase;
         };
-        #{stripe_prod_dep} /* StripePaymentSheet */ = {
             isa = XCSwiftPackageProductDependency;
-            package = #{stripe_pkg_ref} /* XCRemoteSwiftPackageReference "stripe-ios" */;
-            productName = StripePaymentSheet;
         };
 /* End XCSwiftPackageProductDependency section */
 

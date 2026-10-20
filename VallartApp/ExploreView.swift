@@ -26,6 +26,12 @@ struct ExploreView: View {
                         featuredSection
                             .padding(.top, AppTheme.Spacing.lg)
 
+                        // Trending Now
+                        if !vm.trendingListings.isEmpty || vm.isLoading {
+                            trendingSection
+                                .padding(.top, AppTheme.Spacing.lg)
+                        }
+
                         // Upcoming Events
                         upcomingEventsSection
                             .padding(.top, AppTheme.Spacing.lg)
@@ -36,7 +42,38 @@ struct ExploreView: View {
                             .padding(.bottom, AppTheme.Spacing.xxl)
                     }
                 }
+                .refreshable { await vm.load() }
+
+                if let errorMsg = vm.errorMessage {
+                    VStack {
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.white)
+                            Text(errorMsg)
+                                .font(AppTheme.Font.label())
+                                .foregroundStyle(.white)
+                                .lineLimit(2)
+                            Spacer()
+                            Button {
+                                withAnimation(.spring(duration: 0.3)) { vm.errorMessage = nil }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .foregroundStyle(.white.opacity(0.8))
+                            }
+                        }
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.coral)
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        .shadow(color: AppTheme.Colors.coral.opacity(0.4), radius: 8, y: 4)
+                        Spacer()
+                    }
+                    .padding(.top, AppTheme.Spacing.lg)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(10)
+                }
             }
+            .animation(.spring(duration: 0.3), value: vm.errorMessage != nil)
             .navBarHidden(true)
         }
     }
@@ -94,11 +131,39 @@ struct ExploreView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.Spacing.md) {
-                    ForEach(vm.featuredListings) { listing in
-                        NavigationLink(destination: ListingDetailView(listing: listing)) {
-                            FeaturedCardView(listing: listing)
+                    if vm.isLoading {
+                        ForEach(0..<3, id: \.self) { _ in FeaturedCardSkeleton() }
+                    } else {
+                        ForEach(vm.featuredListings) { listing in
+                            NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                FeaturedCardView(listing: listing)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, AppTheme.Spacing.md)
+            }
+        }
+    }
+
+    // MARK: Trending Now
+    private var trendingSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            SectionHeaderView(title: "Trending Now", subtitle: "Most reviewed this week")
+                .padding(.horizontal, AppTheme.Spacing.md)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppTheme.Spacing.sm) {
+                    if vm.isLoading {
+                        ForEach(0..<3, id: \.self) { _ in FeaturedCardSkeleton() }
+                    } else {
+                        ForEach(vm.trendingListings) { listing in
+                            NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                FeaturedCardView(listing: listing)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
                 .padding(.horizontal, AppTheme.Spacing.md)
@@ -133,12 +198,28 @@ struct ExploreView: View {
                 .padding(.horizontal, AppTheme.Spacing.md)
 
             LazyVStack(spacing: AppTheme.Spacing.sm) {
-                ForEach(vm.popularListings) { listing in
-                    NavigationLink(destination: ListingDetailView(listing: listing)) {
-                        ListingRowView(listing: listing)
+                if vm.isLoading {
+                    ForEach(0..<5, id: \.self) { _ in
+                        ListingRowSkeleton()
+                            .padding(.horizontal, AppTheme.Spacing.md)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, AppTheme.Spacing.md)
+                } else {
+                    ForEach(vm.popularListings) { listing in
+                        NavigationLink(destination: ListingDetailView(listing: listing)) {
+                            ListingRowView(listing: listing)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                    }
+                    // Infinite scroll trigger
+                    if vm.canLoadMore {
+                        HStack {
+                            if vm.isLoadingMore { ProgressView() }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(AppTheme.Spacing.md)
+                        .onAppear { Task { await vm.loadNextPage() } }
+                    }
                 }
             }
         }
@@ -150,9 +231,13 @@ class ExploreViewModel: ObservableObject {
     @Published var featuredListings: [Listing] = []
     @Published var featuredEvents: [Event] = []
     @Published var popularListings: [Listing] = []
+    @Published var trendingListings: [Listing] = []
     @Published var isLoading = false
+    @Published var isLoadingMore = false
+    @Published var canLoadMore = true
     @Published var errorMessage: String?
 
+    private let pageSize = 20
     private let listingRepo: ListingRepositoryProtocol = SupabaseListingRepository.shared
     private let eventRepo: EventRepositoryProtocol     = SupabaseEventRepository.shared
 
@@ -161,17 +246,33 @@ class ExploreViewModel: ObservableObject {
     @MainActor
     func load() async {
         isLoading = true
+        canLoadMore = true
         errorMessage = nil
         do {
-            async let featured = listingRepo.fetchFeatured()
-            async let popular  = listingRepo.fetchAll()
-            async let events   = eventRepo.fetchFeatured()
-            featuredListings = try await featured
-            popularListings  = try await popular
-            featuredEvents   = try await events
+            async let featured  = listingRepo.fetchFeatured()
+            async let popular   = listingRepo.fetchPage(offset: 0, limit: pageSize)
+            async let events    = eventRepo.fetchFeatured()
+            async let trending  = listingRepo.fetchTrending(limit: 10)
+            featuredListings  = try await featured
+            popularListings   = try await popular
+            featuredEvents    = try await events
+            trendingListings  = try await trending
+            canLoadMore = popularListings.count == pageSize
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    @MainActor
+    func loadNextPage() async {
+        guard !isLoadingMore && canLoadMore else { return }
+        isLoadingMore = true
+        do {
+            let next = try await listingRepo.fetchPage(offset: popularListings.count, limit: pageSize)
+            popularListings.append(contentsOf: next)
+            canLoadMore = next.count == pageSize
+        } catch {}
+        isLoadingMore = false
     }
 }

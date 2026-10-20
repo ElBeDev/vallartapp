@@ -26,8 +26,15 @@ struct SearchView: View {
             if vm.query.isEmpty && !vm.hasActiveFilters {
                 browseByCategory
             } else if vm.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: AppTheme.Spacing.sm) {
+                        ForEach(0..<6, id: \.self) { _ in
+                            ListingRowSkeleton()
+                                .padding(.horizontal, AppTheme.Spacing.md)
+                        }
+                    }
+                    .padding(.top, AppTheme.Spacing.sm)
+                }
             } else if vm.results.isEmpty {
                         emptyState
                     } else {
@@ -89,23 +96,63 @@ struct SearchView: View {
                 if vm.lgbtFriendlyOnly {
                     ActiveFilterChip(text: "LGBT+ Friendly") { vm.lgbtFriendlyOnly = false }
                 }
+                if let price = vm.selectedPriceRange {
+                    ActiveFilterChip(text: price.symbol) { vm.selectedPriceRange = nil }
+                }
             }
         }
     }
 
     private var browseByCategory: some View {
         ScrollView(showsIndicators: false) {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
-                      spacing: AppTheme.Spacing.md) {
-                ForEach(ListingCategory.allCases) { cat in
-                    NavigationLink(destination: CategoryListView(category: cat)) {
-                        CategoryGridCard(category: cat)
+            VStack(alignment: .leading, spacing: 0) {
+                if !vm.recentSearches.isEmpty {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        HStack {
+                            Text("Recent")
+                                .font(AppTheme.Font.headline())
+                                .foregroundStyle(AppTheme.Colors.deepNavy)
+                            Spacer()
+                            Button("Clear") { vm.clearRecentSearches() }
+                                .font(AppTheme.Font.caption())
+                                .foregroundStyle(AppTheme.Colors.mediumGray)
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: AppTheme.Spacing.xs) {
+                                ForEach(vm.recentSearches, id: \.self) { term in
+                                    Button { vm.query = term } label: {
+                                        Label(term, systemImage: "clock")
+                                            .font(AppTheme.Font.label())
+                                            .foregroundStyle(AppTheme.Colors.deepNavy)
+                                            .padding(.horizontal, AppTheme.Spacing.md)
+                                            .padding(.vertical, AppTheme.Spacing.sm)
+                                            .background(AppTheme.Colors.white)
+                                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.full))
+                                            .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, AppTheme.Spacing.md)
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding(.top, AppTheme.Spacing.md)
+                    .padding(.bottom, AppTheme.Spacing.md)
                 }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
+                          spacing: AppTheme.Spacing.md) {
+                    ForEach(ListingCategory.allCases) { cat in
+                        NavigationLink(destination: CategoryListView(category: cat)) {
+                            CategoryGridCard(category: cat)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(AppTheme.Spacing.md)
+                .padding(.bottom, AppTheme.Spacing.xxl)
             }
-            .padding(AppTheme.Spacing.md)
-            .padding(.bottom, AppTheme.Spacing.xxl)
         }
     }
 
@@ -154,6 +201,7 @@ class SearchViewModel: ObservableObject {
     @Published var selectedNeighborhood: Neighborhood? = nil { didSet { Task { await runSearch() } } }
     @Published var openNowOnly: Bool = false { didSet { Task { await runSearch() } } }
     @Published var lgbtFriendlyOnly: Bool = false { didSet { Task { await runSearch() } } }
+    @Published var selectedPriceRange: PriceRange? = nil { didSet { Task { await runSearch() } } }
     @Published var showingFilters: Bool = false
     @Published var results: [Listing] = []
     @Published var isLoading = false
@@ -161,8 +209,10 @@ class SearchViewModel: ObservableObject {
     private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
     private var searchTask: Task<Void, Never>?
 
+    @Published private(set) var recentSearches: [String] = UserDefaults.standard.stringArray(forKey: "recentSearches") ?? []
+
     var hasActiveFilters: Bool {
-        selectedCategory != nil || selectedNeighborhood != nil || openNowOnly || lgbtFriendlyOnly
+        selectedCategory != nil || selectedNeighborhood != nil || openNowOnly || lgbtFriendlyOnly || selectedPriceRange != nil
     }
 
     // Debounce 0.35s on query changes
@@ -185,12 +235,29 @@ class SearchViewModel: ObservableObject {
                 category: selectedCategory,
                 neighborhood: selectedNeighborhood,
                 openOnly: openNowOnly,
-                lgbtOnly: lgbtFriendlyOnly
+                lgbtOnly: lgbtFriendlyOnly,
+                priceRange: selectedPriceRange
             )
+            if !query.isEmpty { saveRecentSearch(query) }
         } catch {
             results = []
         }
         isLoading = false
+    }
+
+    private func saveRecentSearch(_ term: String) {
+        let t = term.trimmingCharacters(in: .whitespaces)
+        guard t.count >= 2 else { return }
+        var list = recentSearches
+        list.removeAll { $0.lowercased() == t.lowercased() }
+        list.insert(t, at: 0)
+        recentSearches = Array(list.prefix(8))
+        UserDefaults.standard.set(recentSearches, forKey: "recentSearches")
+    }
+
+    func clearRecentSearches() {
+        recentSearches = []
+        UserDefaults.standard.removeObject(forKey: "recentSearches")
     }
 }
 
@@ -222,6 +289,23 @@ struct FilterSheetView: View {
                     .pickerStyle(.menu)
                 }
 
+                Section("Price Range") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: AppTheme.Spacing.xs) {
+                            FilterChip(title: "Any", isSelected: vm.selectedPriceRange == nil) {
+                                vm.selectedPriceRange = nil
+                            }
+                            ForEach(PriceRange.allCases, id: \.self) { price in
+                                FilterChip(title: price.symbol, isSelected: vm.selectedPriceRange == price) {
+                                    vm.selectedPriceRange = vm.selectedPriceRange == price ? nil : price
+                                }
+                            }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
+                }
+
                 Section("Options") {
                     Toggle("Open Now", isOn: $vm.openNowOnly)
                     Toggle("LGBT+ Friendly", isOn: $vm.lgbtFriendlyOnly)
@@ -233,6 +317,7 @@ struct FilterSheetView: View {
                         vm.selectedNeighborhood = nil
                         vm.openNowOnly = false
                         vm.lgbtFriendlyOnly = false
+                        vm.selectedPriceRange = nil
                     }
                 }
             }

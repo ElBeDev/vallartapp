@@ -59,8 +59,10 @@ class AuthService: ObservableObject {
             )
             session = s
             await ensureProfile(user: s.user, name: fullName(from: credential))
+            Haptic.success()
         } catch {
             errorMessage = error.localizedDescription
+            Haptic.error()
         }
         isLoading = false
     }
@@ -76,6 +78,7 @@ class AuthService: ObservableObject {
             )
         } catch {
             errorMessage = error.localizedDescription
+            Haptic.error()
         }
         isLoading = false
     }
@@ -88,8 +91,10 @@ class AuthService: ObservableObject {
             let s = try await supabase.auth.signIn(email: email, password: password)
             session = s
             await loadProfile(uid: s.user.id)
+            Haptic.success()
         } catch {
             errorMessage = error.localizedDescription
+            Haptic.error()
         }
         isLoading = false
     }
@@ -108,12 +113,15 @@ class AuthService: ObservableObject {
             if let s = response.session {
                 session = s
                 await ensureProfile(user: s.user, name: name)
+                Haptic.success()
             } else {
                 // Email confirmation required — tell the user
                 errorMessage = "Check your email to confirm your account."
+                Haptic.light()
             }
         } catch {
             errorMessage = error.localizedDescription
+            Haptic.error()
         }
         isLoading = false
     }
@@ -142,6 +150,31 @@ class AuthService: ObservableObject {
             try await supabase.auth.signOut()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Delete Account (App Store guideline 5.1.1(v))
+    // Calls the `delete_my_account` RPC (supabase/migrations/20261020_delete_my_account.sql),
+    // which removes the auth user; profile, reviews and tokens cascade.
+    func deleteAccount() async -> Bool {
+        guard let uid = currentUserID else { return false }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            _ = try? await supabase.storage
+                .from("listings")
+                .remove(paths: ["avatars/\(uid.uuidString).jpg"])
+            try await supabase.rpc("delete_my_account").execute()
+            try? await supabase.auth.signOut()
+            session = nil
+            profile = nil
+            Haptic.success()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            Haptic.error()
+            return false
         }
     }
 
@@ -242,7 +275,7 @@ class AuthService: ObservableObject {
         return (try? await SupabaseListingRepository.shared.fetchReviews(byUserID: uid)) ?? []
     }
 
-    // MARK: - Refresh Profile (called after premium upgrade)
+    // MARK: - Refresh Profile
     func refreshProfile() async {
         guard let uid = currentUserID else { return }
         await loadProfile(uid: uid)

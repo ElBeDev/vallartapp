@@ -34,9 +34,6 @@ struct NotificationsView: View {
             .task {
                 if auth.isLoggedIn { await push.loadNotifications() }
             }
-            .refreshable {
-                if auth.isLoggedIn { await push.loadNotifications() }
-            }
         }
     }
 
@@ -87,30 +84,66 @@ struct NotificationsView: View {
 
     // MARK: - Notification List
     private var notificationList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                permissionBanner
-                    .padding(.top, AppTheme.Spacing.md)
-
-                if push.notifications.isEmpty {
-                    emptyState
-                } else {
-                    ForEach(push.notifications) { notif in
-                        NotificationRow(notification: notif)
-                            .onTapGesture {
-                                if !notif.isRead {
-                                    Task { await push.markRead(notif.id) }
-                                }
-                            }
-                        if notif.id != push.notifications.last?.id {
-                            Divider().padding(.leading, 68)
-                        }
-                    }
+        List {
+            if push.permissionStatus == .denied || push.permissionStatus == .notDetermined {
+                Section {
+                    permissionBanner
+                        .listRowInsets(EdgeInsets(top: AppTheme.Spacing.md, leading: 0, bottom: 0, trailing: 0))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             }
-            .padding(.bottom, AppTheme.Spacing.xxl)
+
+            if push.notifications.isEmpty {
+                Section {
+                    emptyState
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+            } else {
+                ForEach(push.notifications) { notif in
+                    NotificationRow(notification: notif)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(notif.isRead ? Color.clear : AppTheme.Colors.teal.opacity(0.04))
+                        .listRowSeparator(.hidden)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if !notif.isRead {
+                                Task { await push.markRead(notif.id) }
+                            }
+                            // Navigate to linked content
+                            if let idStr = notif.listingId, let id = UUID(uuidString: idStr) {
+                                push.pendingDeepLink = .listing(id)
+                            } else if let idStr = notif.eventId, let id = UUID(uuidString: idStr) {
+                                push.pendingDeepLink = .event(id)
+                            }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            if !notif.isRead {
+                                Button {
+                                    Task { await push.markRead(notif.id) }
+                                } label: {
+                                    Label("Read", systemImage: "checkmark")
+                                }
+                                .tint(AppTheme.Colors.teal)
+                            }
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                push.deleteNotification(notif.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                }
+            }
         }
+        .listStyle(.plain)
         .background(AppTheme.Colors.sand)
+        .scrollContentBackground(.hidden)
+        .refreshable {
+            if auth.isLoggedIn { await push.loadNotifications() }
+        }
     }
 
     // MARK: - Empty state

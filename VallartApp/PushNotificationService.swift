@@ -4,6 +4,19 @@ import UserNotifications
 import UIKit
 import Supabase
 
+// MARK: - DeepLinkTarget
+enum DeepLinkTarget: Identifiable {
+    case listing(UUID)
+    case event(UUID)
+
+    var id: String {
+        switch self {
+        case .listing(let id): return "listing-\(id)"
+        case .event(let id):   return "event-\(id)"
+        }
+    }
+}
+
 // MARK: - PushNotificationService
 // Handles APNs registration, permission prompt, token save to Supabase,
 // and foreground notification display.
@@ -15,6 +28,7 @@ final class PushNotificationService: ObservableObject {
     @Published var permissionStatus: UNAuthorizationStatus = .notDetermined
     @Published var notifications: [AppNotification] = []
     @Published var unreadCount: Int = 0
+    @Published var pendingDeepLink: DeepLinkTarget? = nil
 
     private let delegate = PushDelegate()
 
@@ -137,6 +151,12 @@ final class PushNotificationService: ObservableObject {
         }
     }
 
+    // MARK: - Delete notification (local only)
+    func deleteNotification(_ id: String) {
+        notifications.removeAll { $0.id == id }
+        unreadCount = notifications.filter { !$0.isRead }.count
+    }
+
     // MARK: - Update badge count
     func updateBadge(_ count: Int) async {
         do {
@@ -166,10 +186,19 @@ final class PushDelegate: NSObject, UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
-        if let listingID = userInfo["listing_id"] as? String {
-            print("Push tapped → listing:", listingID)
-        } else if let eventID = userInfo["event_id"] as? String {
-            print("Push tapped → event:", eventID)
+        // Resolve the target before hopping actors — userInfo itself isn't Sendable
+        let target: DeepLinkTarget?
+        if let idStr = userInfo["listing_id"] as? String, let id = UUID(uuidString: idStr) {
+            target = .listing(id)
+        } else if let idStr = userInfo["event_id"] as? String, let id = UUID(uuidString: idStr) {
+            target = .event(id)
+        } else {
+            target = nil
+        }
+        if let target {
+            Task { @MainActor in
+                PushNotificationService.shared.pendingDeepLink = target
+            }
         }
         completionHandler()
     }

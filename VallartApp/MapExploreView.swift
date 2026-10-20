@@ -4,8 +4,8 @@ import MapKit
 
 // MARK: - MapExploreView
 struct MapExploreView: View {
-    /// All listings passed in from ExploreViewModel — same data as Explore tab
-    var listings: [Listing] = []
+    @State private var allListings: [Listing] = []
+    @State private var isLoadingPins = false
     @State private var selectedCategory: ListingCategory? = nil
     @State private var selectedListing: Listing? = nil
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -15,16 +15,18 @@ struct MapExploreView: View {
         )
     )
 
-    /// Filter listings by selected category — no network call needed
+    private let repo: ListingRepositoryProtocol = SupabaseListingRepository.shared
+
     private var visibleListings: [Listing] {
-        guard let cat = selectedCategory else { return listings }
-        return listings.filter { $0.category == cat }
+        guard let cat = selectedCategory else { return allListings }
+        return allListings.filter { $0.category == cat }
     }
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 Map(position: $cameraPosition) {
+                    UserAnnotation()
                     ForEach(visibleListings) { listing in
                         Annotation(listing.name, coordinate: listing.coordinate) {
                             MapPinView(listing: listing)
@@ -42,6 +44,9 @@ struct MapExploreView: View {
                     }
                 }
                 .mapStyle(.standard(elevation: .realistic))
+                .mapControls {
+                    MapUserLocationButton()
+                }
                 .ignoresSafeArea(edges: .top)
                 // Dismiss card when tapping the map
                 .onTapGesture { selectedListing = nil }
@@ -82,7 +87,15 @@ struct MapExploreView: View {
             .navigationTitle("Map")
             .navTitleMode(.inline)
             .animation(.spring(duration: 0.3), value: selectedListing?.id)
+            .task { await loadAllListings() }
         }
+    }
+
+    private func loadAllListings() async {
+        guard allListings.isEmpty else { return }
+        isLoadingPins = true
+        allListings = (try? await repo.fetchPage(offset: 0, limit: 500)) ?? []
+        isLoadingPins = false
     }
 }
 
@@ -102,20 +115,7 @@ struct MapPinView: View {
         }
     }
 
-    private var pinColor: Color {
-        switch listing.category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
+    private var pinColor: Color { listing.category.color }
 }
 
 // MARK: - MapPreviewCard
@@ -140,9 +140,7 @@ struct MapPreviewCard: View {
                     .font(AppTheme.Font.caption())
                     .foregroundStyle(AppTheme.Colors.mediumGray)
                 HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.Colors.goldenSun)
+                    StarRatingView(rating: listing.rating, size: 10)
                     Text(String(format: "%.1f", listing.rating))
                         .font(AppTheme.Font.caption())
                         .foregroundStyle(AppTheme.Colors.deepNavy)
@@ -167,18 +165,5 @@ struct MapPreviewCard: View {
         .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
     }
 
-    private var pinColor: Color {
-        switch listing.category {
-        case .restaurants: return AppTheme.Colors.coral
-        case .bars:        return AppTheme.Colors.nightPurple
-        case .hotels:      return AppTheme.Colors.deepNavy
-        case .activities:  return AppTheme.Colors.teal
-        case .yachts:      return AppTheme.Colors.oceanBlue
-        case .rentals:     return AppTheme.Colors.goldenSun
-        case .events:      return AppTheme.Colors.coral
-        case .beaches:     return AppTheme.Colors.teal
-        case .shopping:    return AppTheme.Colors.deepNavy
-        case .spas:        return AppTheme.Colors.palmGreen
-        }
-    }
+    private var pinColor: Color { listing.category.color }
 }

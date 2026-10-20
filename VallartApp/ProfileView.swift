@@ -10,13 +10,15 @@ struct ProfileView: View {
     @State private var savedListings: [Listing] = []
     @State private var savedLoaded = false
     @State private var myReviewCount: Int = 0
+    @State private var myPhotoCount: Int = 0
     @State private var showEditName = false
     @State private var editNameText = ""
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isUploadingAvatar = false
     @State private var showSavedSheet = false
-    @State private var showPremium = false
-    @State private var showBusinessPaywall = false
+    @State private var showSettings = false
+    @State private var showDeleteConfirm = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -34,8 +36,7 @@ struct ProfileView: View {
             .navTitleMode(.large)
             .sheet(isPresented: $showingLogin) { LoginView() }
             .sheet(isPresented: $showSavedSheet) { savedSheet }
-            .sheet(isPresented: $showPremium) { PremiumView(startOn: .user) }
-            .sheet(isPresented: $showBusinessPaywall) { PremiumView(startOn: .business) }
+            .sheet(isPresented: $showSettings) { settingsSheet }
             .alert(String(localized: "profile.editName"), isPresented: $showEditName) {
                 TextField(String(localized: "profile.namePlaceholder"), text: $editNameText)
                 Button(String(localized: "profile.save")) { Task { await auth.updateName(editNameText) } }
@@ -47,7 +48,7 @@ struct ProfileView: View {
                           let data = try? await newItem.loadTransferable(type: Data.self),
                           let image = UIImage(data: data) else { return }
                     isUploadingAvatar = true
-                    await auth.uploadAvatar(image)
+                    _ = await auth.uploadAvatar(image)
                     isUploadingAvatar = false
                 }
             }
@@ -55,8 +56,10 @@ struct ProfileView: View {
                 if auth.isLoggedIn && !savedLoaded {
                     async let saved    = auth.fetchSavedListings()
                     async let reviews  = auth.fetchMyReviews()
+                    let fetchedReviews = await reviews
                     savedListings    = await saved
-                    myReviewCount    = await reviews.count
+                    myReviewCount    = fetchedReviews.count
+                    myPhotoCount     = fetchedReviews.flatMap { $0.photos }.count
                     savedLoaded      = true
                 }
             }
@@ -110,7 +113,7 @@ struct ProfileView: View {
                 .font(AppTheme.Font.caption())
                 .foregroundStyle(AppTheme.Colors.mediumGray)
                 .multilineTextAlignment(.center)
-            Button { showingLogin = true } label: {
+            Button { openURL(AppConfig.businessContactURL) } label: {
                 Label(String(localized: "profile.business.add"), systemImage: "building.2.fill")
                     .font(AppTheme.Font.label())
                     .foregroundStyle(AppTheme.Colors.deepNavy)
@@ -181,30 +184,6 @@ struct ProfileView: View {
                         }
                     }
 
-                    // Premium badge or upgrade prompt
-                    if auth.profile?.isPremium == true,
-                       let tier = auth.profile?.premiumTier {
-                        let isExplorer = tier.hasPrefix("user_")
-                        PremiumBadgeView(
-                            tierName: isExplorer ? "Explorer" : tier.replacingOccurrences(of: "_", with: " ").capitalized,
-                            isExplorer: isExplorer
-                        )
-                    } else {
-                        Button { showPremium = true } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "figure.walk.departure")
-                                    .font(.system(size: 11))
-                                Text("Upgrade to Explorer")
-                                    .font(AppTheme.Font.caption(12))
-                            }
-                            .foregroundStyle(AppTheme.Colors.teal)
-                            .padding(.horizontal, AppTheme.Spacing.sm)
-                            .padding(.vertical, 4)
-                            .background(AppTheme.Colors.teal.opacity(0.12))
-                            .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(AppTheme.Colors.teal.opacity(0.3), lineWidth: 1))
-                        }
-                    }
 
                     Text(auth.session?.user.email ?? "")
                         .font(AppTheme.Font.caption())
@@ -218,7 +197,7 @@ struct ProfileView: View {
                     Divider().frame(height: 40)
                     StatView(value: "\(auth.profile?.savedListingIds.count ?? 0)", label: String(localized: "profile.stats.saved"))
                     Divider().frame(height: 40)
-                    StatView(value: "0", label: String(localized: "profile.stats.photos"))
+                    StatView(value: "\(myPhotoCount)", label: String(localized: "profile.stats.photos"))
                 }
                 .background(AppTheme.Colors.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
@@ -237,14 +216,31 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    Button { showBusinessPaywall = true } label: {
-                        ProfileMenuItem(icon: "building.2.fill", title: String(localized: "profile.menu.business"), color: AppTheme.Colors.teal)
+                    Button {
+                        // Owners manage their listing on the web portal; everyone else contacts us
+                        openURL(auth.profile?.isBusinessOwner == true ? AppConfig.businessURL : AppConfig.businessContactURL)
+                    } label: {
+                        ProfileMenuItem(
+                            icon: "building.2.fill",
+                            title: String(localized: auth.profile?.isBusinessOwner == true ? "profile.menu.business" : "profile.business.add"),
+                            color: AppTheme.Colors.teal
+                        )
                     }
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "bell.fill",        title: String(localized: "profile.menu.notifications"), color: AppTheme.Colors.nightPurple)
+                    Button {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        ProfileMenuItem(icon: "bell.fill", title: String(localized: "profile.menu.notifications"), color: AppTheme.Colors.nightPurple)
+                    }
+                    .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
-                    ProfileMenuItem(icon: "gearshape.fill",   title: String(localized: "profile.menu.settings"),      color: AppTheme.Colors.mediumGray)
+                    Button { showSettings = true } label: {
+                        ProfileMenuItem(icon: "gearshape.fill", title: String(localized: "profile.menu.settings"), color: AppTheme.Colors.mediumGray)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .background(AppTheme.Colors.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
@@ -269,6 +265,71 @@ struct ProfileView: View {
                         .foregroundStyle(AppTheme.Colors.coral)
                 }
                 .padding(.bottom, AppTheme.Spacing.xxl)
+            }
+        }
+    }
+
+    // MARK: Settings Sheet
+    private var settingsSheet: some View {
+        NavigationStack {
+            Form {
+                Section(String(localized: "settings.support")) {
+                    Link(String(localized: "settings.contact"), destination: AppConfig.supportMailURL)
+                    Link(String(localized: "settings.privacy"), destination: AppConfig.privacyURL)
+                    Link(String(localized: "settings.terms"), destination: AppConfig.termsURL)
+                }
+                Section {
+                    Button(String(localized: "profile.signOut"), role: .destructive) {
+                        Haptic.medium()
+                        Task { await auth.signOut() }
+                    }
+                }
+                Section {
+                    Button(String(localized: "settings.deleteAccount"), role: .destructive) {
+                        Haptic.medium()
+                        showDeleteConfirm = true
+                    }
+                    .disabled(auth.isLoading)
+                } footer: {
+                    Text(String(localized: "settings.deleteAccount.footer"))
+                }
+                if let errMsg = auth.errorMessage {
+                    Section {
+                        Text(errMsg)
+                            .font(AppTheme.Font.caption())
+                            .foregroundStyle(AppTheme.Colors.coral)
+                    }
+                }
+                Section {
+                    HStack {
+                        Text("Version")
+                        Spacer()
+                        Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+                            .foregroundStyle(AppTheme.Colors.mediumGray)
+                    }
+                }
+            }
+            .navigationTitle(String(localized: "profile.menu.settings"))
+            .navTitleMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "general.done")) { showSettings = false }
+                        .foregroundStyle(AppTheme.Colors.coral)
+                }
+            }
+            .alert(String(localized: "settings.deleteAccount.title"), isPresented: $showDeleteConfirm) {
+                Button(String(localized: "settings.deleteAccount.confirm"), role: .destructive) {
+                    Task {
+                        if await auth.deleteAccount() {
+                            showSettings = false
+                            savedListings = []
+                            savedLoaded = false
+                        }
+                    }
+                }
+                Button(String(localized: "profile.cancel"), role: .cancel) {}
+            } message: {
+                Text(String(localized: "settings.deleteAccount.message"))
             }
         }
     }
@@ -328,28 +389,28 @@ struct ProfileView: View {
                             .padding(.horizontal, AppTheme.Spacing.xl)
                     }
                 } else {
-                    ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: AppTheme.Spacing.sm) {
-                            ForEach(savedListings) { listing in
-                                NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                    ListingRowView(listing: listing)
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.horizontal, AppTheme.Spacing.md)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await auth.toggleSaved(listingID: listing.id)
-                                            savedListings.removeAll { $0.id == listing.id }
-                                        }
-                                    } label: {
-                                        Label(String(localized: "saved.remove"), systemImage: "heart.slash.fill")
+                    List {
+                        ForEach(savedListings) { listing in
+                            NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                ListingRowView(listing: listing)
+                            }
+                            .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.md, bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.md))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Task {
+                                        await auth.toggleSaved(listingID: listing.id)
+                                        savedListings.removeAll { $0.id == listing.id }
                                     }
+                                } label: {
+                                    Label(String(localized: "saved.remove"), systemImage: "heart.slash.fill")
                                 }
                             }
                         }
-                        .padding(.vertical, AppTheme.Spacing.md)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
             .navigationTitle(String(localized: "saved.title"))
@@ -384,25 +445,37 @@ struct LoginView: View {
                     VStack(spacing: AppTheme.Spacing.xl) {
                         // Logo
                         VStack(spacing: AppTheme.Spacing.sm) {
-                            Image(systemName: "sun.max.fill")
-                                .font(.system(size: 60))
-                                .foregroundStyle(AppTheme.Colors.coral)
-                            Text("VallartApp")
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [AppTheme.Colors.coral, AppTheme.Colors.goldenSun],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 90, height: 90)
+                                    .shadow(color: AppTheme.Colors.coral.opacity(0.4), radius: 12, y: 4)
+                                Image(systemName: "sun.max.fill")
+                                    .font(.system(size: 38, weight: .medium))
+                                    .foregroundStyle(.white)
+                            }
+                            Text(AppConfig.appName)
                                 .font(AppTheme.Font.display())
                                 .foregroundStyle(AppTheme.Colors.deepNavy)
-                            Text("Puerto Vallarta in your pocket")
+                            Text(AppConfig.tagline)
                                 .font(AppTheme.Font.body())
                                 .foregroundStyle(AppTheme.Colors.mediumGray)
                         }
                         .padding(.top, AppTheme.Spacing.xl)
 
                         // Mode picker
-                        Picker("Mode", selection: $mode) {
-                            Text("Sign In").tag(Mode.signIn)
-                            Text("Sign Up").tag(Mode.signUp)
-                            Text("Magic Link").tag(Mode.magicLink)
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            FilterChip(title: "Sign In",    isSelected: mode == .signIn)    { withAnimation { mode = .signIn } }
+                            FilterChip(title: "Sign Up",    isSelected: mode == .signUp)    { withAnimation { mode = .signUp } }
+                            FilterChip(title: "Magic Link", icon: "wand.and.stars",
+                                       isSelected: mode == .magicLink) { withAnimation { mode = .magicLink } }
                         }
-                        .pickerStyle(.segmented)
                         .padding(.horizontal, AppTheme.Spacing.xl)
 
                         if magicLinkSent {

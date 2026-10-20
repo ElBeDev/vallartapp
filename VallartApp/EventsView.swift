@@ -16,8 +16,13 @@ struct EventsView: View {
                         .padding(.vertical, AppTheme.Spacing.sm)
 
                     if vm.isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        ScrollView(showsIndicators: false) {
+                            LazyVStack(spacing: AppTheme.Spacing.md) {
+                                ForEach(0..<5, id: \.self) { _ in EventRowSkeleton() }
+                            }
+                            .padding(.horizontal, AppTheme.Spacing.md)
+                            .padding(.top, AppTheme.Spacing.sm)
+                        }
                     } else if vm.filteredEvents.isEmpty {
                         emptyState
                     } else {
@@ -33,6 +38,7 @@ struct EventsView: View {
                             .padding(.horizontal, AppTheme.Spacing.md)
                             .padding(.bottom, AppTheme.Spacing.xxl)
                         }
+                        .refreshable { await vm.applyFilter() }
                     }
                 }
             }
@@ -218,6 +224,21 @@ struct EventDetailView: View {
         }
         .ignoresSafeArea(edges: .top)
         .navTitleMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(item: shareContent) {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 2)
+                }
+            }
+        }
+    }
+
+    private var shareContent: String {
+        var lines = [event.title, event.formattedDate, event.address, event.neighborhood.displayName]
+        if let url = event.ticketURL { lines.append(url) }
+        return lines.joined(separator: "\n")
     }
 
     private var heroFallback: some View {
@@ -270,22 +291,34 @@ struct EventListRowView: View {
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.md) {
-            // Date badge
-            VStack(spacing: 2) {
-                Text(dayString)
-                    .font(AppTheme.Font.caption(10))
-                    .foregroundStyle(AppTheme.Colors.coral)
-                    .textCase(.uppercase)
-                Text(dayNumber)
-                    .font(AppTheme.Font.display(22))
-                    .foregroundStyle(AppTheme.Colors.deepNavy)
+            // Photo thumbnail when available, date badge as fallback
+            if event.photos.first != nil {
+                ListingImageView(
+                    urlString: event.photos.first,
+                    width: 64, height: 64,
+                    cornerRadius: AppTheme.Radius.sm,
+                    fallbackColor: AppTheme.Colors.coral
+                )
+            } else {
+                VStack(spacing: 2) {
+                    Text(dayString)
+                        .font(AppTheme.Font.caption(10))
+                        .foregroundStyle(AppTheme.Colors.coral)
+                        .textCase(.uppercase)
+                    Text(dayNumber)
+                        .font(AppTheme.Font.display(22))
+                        .foregroundStyle(AppTheme.Colors.deepNavy)
+                }
+                .frame(width: 64, height: 64)
+                .background(AppTheme.Colors.coral.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
             }
-            .frame(width: 50)
-            .padding(AppTheme.Spacing.xs)
-            .background(AppTheme.Colors.coral.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
 
             VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                Text("\(dayString) \(dayNumber)".uppercased())
+                    .font(AppTheme.Font.caption(10))
+                    .foregroundStyle(AppTheme.Colors.coral)
+
                 Text(event.title)
                     .font(AppTheme.Font.label())
                     .foregroundStyle(AppTheme.Colors.deepNavy)

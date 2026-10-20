@@ -23,31 +23,48 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct VallartAppApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    init() {
+        // 50 MB memory + 250 MB disk so AsyncImage doesn't re-fetch on every navigation
+        URLCache.shared = URLCache(memoryCapacity: 50_000_000, diskCapacity: 250_000_000)
+    }
     @StateObject private var auth = AuthService.shared
     @StateObject private var push = PushNotificationService.shared
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @State private var showLoginAfterOnboarding = false
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environmentObject(auth)
-                .environmentObject(push)
-                .onOpenURL { url in
-                    auth.handleURL(url)
-                }
-                .task {
-                    // Request push permission on first launch
-                    await push.requestPermissionAndRegister()
-                }
-                .onChange(of: auth.isLoggedIn) { _, loggedIn in
-                    if loggedIn {
-                        Task {
-                            // Upload any token saved before user signed in
-                            await push.uploadPendingTokenIfNeeded()
-                            // Load notification inbox
-                            await push.loadNotifications()
+            if hasSeenOnboarding {
+                MainTabView()
+                    .environmentObject(auth)
+                    .environmentObject(push)
+                    .onOpenURL { url in
+                        auth.handleURL(url)
+                    }
+                    .task {
+                        await push.requestPermissionAndRegister()
+                    }
+                    .onChange(of: auth.isLoggedIn) { _, loggedIn in
+                        if loggedIn {
+                            Task {
+                                await push.uploadPendingTokenIfNeeded()
+                                await push.loadNotifications()
+                            }
                         }
                     }
-                }
+                    .sheet(isPresented: $showLoginAfterOnboarding) { LoginView() }
+            } else {
+                OnboardingView(
+                    onSignUp: {
+                        hasSeenOnboarding = true
+                        showLoginAfterOnboarding = true
+                    },
+                    onGuest: {
+                        hasSeenOnboarding = true
+                    }
+                )
+            }
         }
     }
 }
