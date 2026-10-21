@@ -7,6 +7,8 @@
     python3 scripts/app_store.py precio        # gratis + disponible en todos los países
     python3 scripts/app_store.py build         # asigna a la versión 1.0 el build procesado más nuevo
     python3 scripts/app_store.py capturas      # sube build/screenshots/{es,en} (scripts/screenshots.sh)
+    DEMO_USER=… DEMO_PASS=… python3 scripts/app_store.py revisor   # contacto, cuenta demo, notas, derechos
+    python3 scripts/app_store.py enviar        # manda la versión a revisión
     python3 scripts/app_store.py get <ruta>    # lee cualquier cosa de la API
 
 Todo es ENSAYO si no lleva --de-verdad: dice qué haría sin mandar nada. Nada de esto manda la app a revisión.
@@ -32,7 +34,7 @@ DE_VERDAD = "--de-verdad" in sys.argv
 
 # ---------------------------------------------------------------- textos de la ficha
 
-COPYRIGHT = "2026 Eduardo Benavides"
+COPYRIGHT = "2026 Manuel Bernardo Ramirez Osornio"
 CATEGORIAS = ("TRAVEL", "FOOD_AND_DRINK")
 
 FICHA = {
@@ -343,6 +345,55 @@ def cmd_capturas():
                             "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(datos).hexdigest()}}})
 
 
+CONTACTO = {"contactFirstName": "Manuel Bernardo", "contactLastName": "Ramirez Osornio",
+            "contactPhone": "+52 442 669 3885", "contactEmail": "elbedev90@gmail.com"}
+NOTAS = ("Free travel guide for Puerto Vallarta. There are no purchases or subscriptions. An account is optional "
+         "(only needed to save places and write reviews); please use the demo account above, or Sign in with Apple. "
+         "Account deletion: Profile > Settings > Delete Account. Each review has a \"...\" menu to report it or block "
+         "its author. Location is only used on the device to show nearby places on the map.")
+
+
+def cmd_revisor():
+    """Contacto, cuenta demo y notas. La cuenta demo va por entorno (DEMO_USER, DEMO_PASS): el repo es público."""
+    import os
+    usuario, clave = os.environ.get("DEMO_USER"), os.environ.get("DEMO_PASS")
+    if not (usuario and clave):
+        sys.exit("Falta DEMO_USER y DEMO_PASS en el entorno.")
+    attrs = {**CONTACTO, "demoAccountRequired": True, "demoAccountName": usuario, "demoAccountPassword": clave,
+             "notes": NOTAS}
+    v = version()
+    e, d = api("GET", f"/v1/appStoreVersions/{v['id']}/appStoreReviewDetail")
+    if e == 200 and d.get("data"):
+        hacer("actualizar información para el revisor", "PATCH", f"/v1/appStoreReviewDetails/{d['data']['id']}",
+              {"data": {"type": "appStoreReviewDetails", "id": d["data"]["id"], "attributes": attrs}})
+    else:
+        hacer("crear información para el revisor", "POST", "/v1/appStoreReviewDetails",
+              {"data": {"type": "appStoreReviewDetails", "attributes": attrs,
+                        "relationships": {"appStoreVersion": rel("appStoreVersions", v["id"])}}})
+    # Fotos de Unsplash (licencia libre, uso comercial) y datos públicos de los negocios
+    hacer("derechos de contenido: usa contenido de terceros con derechos", "PATCH", f"/v1/apps/{APP}",
+          {"data": {"type": "apps", "id": APP, "attributes": {"contentRightsDeclaration": "USES_THIRD_PARTY_CONTENT"}}})
+
+
+def cmd_enviar():
+    """Manda la versión editable (con su build asignado) a revisión de la App Store."""
+    v = version()
+    b = leer(f"/v1/appStoreVersions/{v['id']}/build").get("data")
+    if not b:
+        sys.exit("La versión no tiene build asignado: python3 scripts/app_store.py build --de-verdad")
+    print(f"Versión {v['attributes']['versionString']} con build {b['attributes']['version']} → revisión")
+    d = hacer("crear envío", "POST", "/v1/reviewSubmissions",
+              {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
+                        "relationships": {"app": rel("apps", APP)}}})
+    envio = d["data"]["id"] if d else "(nuevo)"
+    hacer("agregar la versión al envío", "POST", "/v1/reviewSubmissionItems",
+          {"data": {"type": "reviewSubmissionItems", "relationships": {
+              "reviewSubmission": rel("reviewSubmissions", envio),
+              "appStoreVersion": rel("appStoreVersions", v["id"])}}})
+    hacer("enviar a revisión", "PATCH", f"/v1/reviewSubmissions/{envio}",
+          {"data": {"type": "reviewSubmissions", "id": envio, "attributes": {"submitted": True}}})
+
+
 def cmd_build():
     v = version()
     listos = [b for b in builds() if b["attributes"]["processingState"] == "VALID" and not b["attributes"]["expired"]]
@@ -360,6 +411,6 @@ if __name__ == "__main__":
         print(json.dumps(leer(args[1], ok=(200, 404)), indent=1, ensure_ascii=False)[:6000])
     else:
         {"estado": cmd_estado, "ficha": cmd_ficha, "edad": cmd_edad, "precio": cmd_precio,
-         "build": cmd_build, "capturas": cmd_capturas}[orden]()
+         "build": cmd_build, "capturas": cmd_capturas, "revisor": cmd_revisor, "enviar": cmd_enviar}[orden]()
         if not DE_VERDAD and orden != "estado":
             print("\n(ensayo: no se mandó nada; con --de-verdad se aplica)")

@@ -4,7 +4,7 @@ export const site = {
   appName: 'VallartApp',
   supportEmail: 'elbedev90@gmail.com',
   // Responsible party for the privacy notice (LFPDPPP, Mexico)
-  owner: 'Eduardo Benavides',
+  owner: 'Manuel Bernardo Ramirez Osornio',
   city: 'Puerto Vallarta, Jalisco, México',
   lastUpdated: '2026-10-20',
 }

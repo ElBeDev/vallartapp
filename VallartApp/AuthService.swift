@@ -283,7 +283,7 @@ class AuthService: ObservableObject {
     }
 
     // MARK: - Private helpers
-    private func loadProfile(uid: UUID) async {
+    private func loadProfile(uid: UUID, createIfMissing: Bool = true) async {
         do {
             let result: UserProfile = try await supabase
                 .from("profiles")
@@ -294,10 +294,15 @@ class AuthService: ObservableObject {
                 .value
             profile = result
         } catch {
-            // Profile may not exist yet — created on first sign-up
+            // Email/password and magic-link users confirm their email before their first
+            // session, so the row may not exist yet — create it now.
+            guard createIfMissing, let user = session?.user, user.id == uid else { return }
+            await ensureProfile(user: user, name: user.userMetadata["name"]?.stringValue)
         }
     }
 
+    /// Creates the profile row if missing; never overwrites an existing one
+    /// (Apple only sends the user's name on the very first sign-in).
     private func ensureProfile(user: User, name: String?) async {
         do {
             try await supabase
@@ -306,9 +311,9 @@ class AuthService: ObservableObject {
                     "id": user.id.uuidString,
                     "name": name ?? user.email ?? "Traveler",
                     "joined_at": ISO8601DateFormatter().string(from: Date())
-                ])
+                ], onConflict: "id", ignoreDuplicates: true)
                 .execute()
-            await loadProfile(uid: user.id)
+            await loadProfile(uid: user.id, createIfMissing: false)
         } catch {
             print("ensureProfile error: \(error)")
         }
