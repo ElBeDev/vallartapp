@@ -382,14 +382,29 @@ def cmd_enviar():
     if not b:
         sys.exit("La versión no tiene build asignado: python3 scripts/app_store.py build --de-verdad")
     print(f"Versión {v['attributes']['versionString']} con build {b['attributes']['version']} → revisión")
-    d = hacer("crear envío", "POST", "/v1/reviewSubmissions",
-              {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
-                        "relationships": {"app": rel("apps", APP)}}})
-    envio = d["data"]["id"] if d else "(nuevo)"
-    hacer("agregar la versión al envío", "POST", "/v1/reviewSubmissionItems",
-          {"data": {"type": "reviewSubmissionItems", "relationships": {
-              "reviewSubmission": rel("reviewSubmissions", envio),
-              "appStoreVersion": rel("appStoreVersions", v["id"])}}})
+    # Un envío a medias (de un intento que Apple rechazó) se reusa: solo puede haber uno abierto
+    abiertos = [x for x in leer(f"/v1/apps/{APP}/reviewSubmissions", {"filter[platform]": "IOS"})["data"]
+                if x["attributes"]["state"] == "READY_FOR_REVIEW"]
+    if abiertos:
+        envio = abiertos[0]["id"]
+        print(f"  → reusar envío abierto {envio}")
+    else:
+        d = hacer("crear envío", "POST", "/v1/reviewSubmissions",
+                  {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
+                            "relationships": {"app": rel("apps", APP)}}})
+        envio = d["data"]["id"] if d else "(nuevo)"
+    items = leer(f"/v1/reviewSubmissions/{envio}/items")["data"] if abiertos else []
+    if not items:
+        e, d = (api("POST", "/v1/reviewSubmissionItems", {"data": {"type": "reviewSubmissionItems", "relationships": {
+            "reviewSubmission": rel("reviewSubmissions", envio),
+            "appStoreVersion": rel("appStoreVersions", v["id"])}}}) if DE_VERDAD else (201, {}))
+        print("  → agregar la versión al envío")
+        if e >= 300:
+            for err in d.get("errors", []):
+                for lista in (err.get("meta", {}).get("associatedErrors") or {}).values():
+                    for x in lista:
+                        print(f"      falta: {x.get('detail')}")
+            sys.exit(f"      Apple dijo {e}: {errores(d)}")
     hacer("enviar a revisión", "PATCH", f"/v1/reviewSubmissions/{envio}",
           {"data": {"type": "reviewSubmissions", "id": envio, "attributes": {"submitted": True}}})
 
